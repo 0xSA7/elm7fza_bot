@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# ═══ verify.sh — pull من جوجل ومقارنة بالبايت مع الريبو ═══
-# المدخل : ACCESS_TOKEN + SCRIPT_ID (env) + الملفات المحلية
-# المخرج : خروج بـ 1 لو فيه اختلاف
+# ═══ verify.sh — pull من جوجل ومقارنة بالبايت ═══
 set -euo pipefail
 
 require() {
@@ -11,28 +9,42 @@ require() {
 require ACCESS_TOKEN
 require SCRIPT_ID
 
-# ننزل المحتوى الحالي من جوجل
-mkdir -p /tmp/verify
-RESPONSE=$(curl -s \
+# ── 1) ننزل المحتوى الحالي من جوجل ──
+curl -s \
   "https://script.googleapis.com/v1/projects/${SCRIPT_ID}/content" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}")
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" > /tmp/verify_response.json
 
-if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+if jq -e '.error' /tmp/verify_response.json > /dev/null 2>&1; then
   echo "::error::فشل pull للتحقق"
-  echo "$RESPONSE" | jq . 2>/dev/null
+  jq . /tmp/verify_response.json
   exit 1
 fi
 
-# نفك كل ملف ونحفظه بنفس الاسم المحلي
-echo "$RESPONSE" | jq -r '.files[] | select(.type == "SERVER_JS") | .name' | while read -r NAME; do
-  echo "$RESPONSE" | jq -r --arg n "$NAME" '.files[] | select(.name == $n and .type == "SERVER_JS") | .source' > "/tmp/verify/${NAME}.gs"
-done
-echo "$RESPONSE" | jq -r '.files[] | select(.type == "JSON" and .name == "appsscript") | .source' > /tmp/verify/appsscript.json
+# ── 2) نفك الملفات من الرد بـ Python (بدون مشاكل jq الجديدة) ──
+mkdir -p /tmp/verify
+python3 << 'PYEOF'
+import json, os
 
-# المقارنة ملف بملف
+with open('/tmp/verify_response.json', encoding='utf-8') as f:
+    data = json.load(f)
+
+for file_info in data.get('files', []):
+    if file_info['type'] == 'SERVER_JS':
+        path = f"/tmp/verify/{file_info['name']}.gs"
+    elif file_info['type'] == 'JSON' and file_info['name'] == 'appsscript':
+        path = '/tmp/verify/appsscript.json'
+    else:
+        continue
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(file_info['source'])
+
+print(f"Extracted {len(data.get('files', []))} files")
+PYEOF
+
+# ── 3) المقارنة ملف بملف ──
 PASS=1
 COUNT=0
-for f in *.gs appsscript.json; do
+for f in *.js appsscript.json; do
   test -f "$f" || continue
   COUNT=$((COUNT+1))
   if ! diff -q "$f" "/tmp/verify/$f" > /dev/null 2>&1; then
@@ -41,11 +53,10 @@ for f in *.gs appsscript.json; do
   fi
 done
 
-# ملفات عند جوجل مش عندنا؟ (من المفروض مستحيل بعد الاستبدال الكامل — بس احتياط)
-for f in /tmp/verify/*.gs; do
-  BASE=$(basename "$f")
-  test -f "$BASE" || {
-    echo "::error::ملف على جوجل مش في الريبو: $BASE"
+# ملفات عندنا مش عند جوجل؟ (المفروض مستحيل بعد الاستبدال — بس احتياط)
+for f in *.js; do
+  test -f "/tmp/verify/$f" || {
+    echo "::error::ملف $f مش موجود على جوجل أصلاً!"
     PASS=0
   }
 done

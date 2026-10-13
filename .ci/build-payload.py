@@ -11,11 +11,11 @@ import os
 def main():
     files = []
 
-    # كل ملفات .gs → SERVER_JS (الاسم من غير الامتداد)
-    for f in sorted(glob.glob('*.gs')):
+    # كل ملفات .js → SERVER_JS (الاسم من غير الامتداد)
+    for f in sorted(glob.glob('*.js')):
         with open(f, encoding='utf-8') as fh:
             files.append({
-                'name': f[:-3],           # App.gs → "App"
+                'name': f[:-3],           # App.js → "App"
                 'type': 'SERVER_JS',
                 'source': fh.read()
             })
