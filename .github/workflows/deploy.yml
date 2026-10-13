@@ -2,12 +2,12 @@ name: Deploy to Google + Telegram report
 
 on:
   push:
-    branches: [main]        # الـ deploy بس على main — برانشات التجارب آمنة
-  workflow_dispatch:        # زرار تشغيل يدوي من صفحة Actions
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: deploy
-  cancel-in-progress: false # لو 2 pushes ورا بعض — ينتظروا في طابور مش يتصادموا
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -18,82 +18,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Make CI scripts executable
+        run: chmod +x .ci/*.sh .ci/*.py
 
-      - name: Install clasp
-        run: npm install -g @google/clasp
-
-      - name: Authenticate clasp
+      # ── المرحلة 1: الاعتماد ──
+      - name: Auth — access token from clasp credentials
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-        run: |
-          test -n "$CLASPRC_JSON" || { echo "::error::Secret CLASPRC_JSON مفقود"; exit 1; }
-          echo "$CLASPRC_JSON" > ~/.clasprc.json
+        run: .ci/auth.sh
 
-      - name: Push to Google Apps Script
+      # ── المرحلة 2: بناء الـ payload ──
+      - name: Build payload from repo files
         run: |
-          test -f .clasp.json || { echo "::error::.clasp.json مش في الريبو"; exit 1; }
-          # yes | = أي سؤال "أكتب فوق؟" بيتجاوب تلقائي — الريبو هو مصدر الحقيقة دايماً
-          yes | clasp push --force
+          COUNT=$(python3 .ci/build-payload.py)
+          echo "→ Payload جاهز: $COUNT ملف"
 
-      - name: Verify Google received the exact code
-        run: |
-          mkdir -p /tmp/verify
-          cp .clasp.json /tmp/verify/
-          (cd /tmp/verify && clasp pull)
-          PASS=1; COUNT=0
-          for f in *.gs appsscript.json; do
-            [ -f "$f" ] || continue
-            COUNT=$((COUNT+1))
-            if ! diff -q "$f" "/tmp/verify/$f" > /dev/null 2>&1; then
-              echo "::error file=$f::جوجل عندها نسخة مختلفة عن الريبو!"
-              PASS=0
-            fi
-          done
-          echo "FILES_COUNT=$COUNT" >> "$GITHUB_ENV"
-          [ "$PASS" = "1" ] || exit 1
-          echo "✓ التحقق تم: $COUNT ملف متطابقين بالبايت على جوجل"
+      # ── المرحلة 3: الرفع ──
+      - name: Push to Google (direct API)
+        run: .ci/push.sh
 
-      - name: Extract commit info + version
-        run: |
-          echo "COMMIT_SHA=${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
-          echo "COMMIT_MSG=$(git log -1 --pretty=%s | tr '\n' ' ')" >> "$GITHUB_ENV"
-          echo "APP_VERSION=$(grep -oE 'VERSION:[[:space:]]*[0-9]+' Config.gs | head -1 | grep -oE '[0-9]+')" >> "$GITHUB_ENV"
-          echo "RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+      # ── المرحلة 4: التحقق ──
+      - name: Verify Google received exact code
+        run: .ci/verify.sh
 
+      # ── المرحلة 5: فحص البوت ──
       - name: Telegram health check
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           ME=$(curl -s "https://api.telegram.org/bot${BOT_TOKEN}/getMe")
           echo "$ME" | grep -q '"ok":true' || { echo "::error::getMe فشل: $ME"; exit 1; }
-          BOT_NAME=$(echo "$ME" | grep -o '"username":"[^"]*"' | head -1 | cut -d'"' -f4)
-          echo "BOT_NAME=${BOT_NAME}" >> "$GITHUB_ENV"
-          echo "✓ البوت @${BOT_NAME} حي"
+          echo "BOT_NAME=$(echo "$ME" | grep -o '"username":"[^"]*"' | head -1 | cut -d'"' -f4)" >> "$GITHUB_ENV"
+          echo "✓ البوت حي"
 
-      - name: Telegram success report
+      # ── المرحلة 6: معلومات الـ commit ──
+      - name: Extract commit info
+        run: |
+          echo "COMMIT_MSG=$(git log -1 --pretty=%s | tr '\n' ' ')" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$(grep -oE 'VERSION:[[:space:]]*[0-9]+' Config.gs | head -1 | grep -oE '[0-9]+')" >> "$GITHUB_ENV"
+
+      # ── المرحلة 7: التقرير ──
+      - name: Notify — success report
         if: success()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MY_CHAT_ID: ${{ secrets.MY_CHAT_ID }}
-        run: |
-          TEXT=$(printf '✅ Deploy ناجح — Version %s\n\n📦 %s — %s\n☁️ Google Apps Script: %s ملف وصلوا ومطابقين 100%%\n🤖 البوت @%s: حي وشغال\n🔗 %s' \
-            "$APP_VERSION" "$COMMIT_SHA" "$COMMIT_MSG" "$FILES_COUNT" "$BOT_NAME" "$RUN_URL")
-          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-            --data-urlencode "chat_id=${MY_CHAT_ID}" \
-            --data-urlencode "text=${TEXT}" > /dev/null
+        run: .ci/notify.sh success
 
-      - name: Telegram failure alert
+      - name: Notify — failure alert
         if: failure()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MY_CHAT_ID: ${{ secrets.MY_CHAT_ID }}
-        run: |
-          TEXT=$(printf '🚨 Deploy فشل!\n\n📦 %s — %s\n⚠️ الكود على جوجل ممكن يكون قديم — راجع السجل\n🔗 %s' \
-            "$COMMIT_SHA" "$COMMIT_MSG" "$RUN_URL")
-          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-            --data-urlencode "chat_id=${MY_CHAT_ID}" \
-            --data-urlencode "text=${TEXT}" > /dev/null
+        run: .ci/notify.sh failure
