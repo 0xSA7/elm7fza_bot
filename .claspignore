@@ -1,0 +1,6 @@
+
+.clasp.json
+.github/**
+.gitignore
+.gitattributes
+*.md

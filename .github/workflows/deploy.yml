@@ -36,7 +36,8 @@ jobs:
       - name: Push to Google Apps Script
         run: |
           test -f .clasp.json || { echo "::error::.clasp.json مش في الريبو"; exit 1; }
-          clasp push --force
+          # yes | = أي سؤال "أكتب فوق؟" بيتجاوب تلقائي — الريبو هو مصدر الحقيقة دايماً
+          yes | clasp push --force
 
       - name: Verify Google received the exact code
         run: |
