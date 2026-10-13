@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 # ═══ auth.sh — استخراج التوكن من CLASPRC_JSON ═══
-# المدخل : CLASPRC_JSON (env)
-# المخرج : ACCESS_TOKEN + SCRIPT_ID (env — تصدير)
 set -euo pipefail
 
 require() {
@@ -10,13 +8,37 @@ require() {
 
 require CLASPRC_JSON
 
-CLIENT_ID=$(echo "$CLASPRC_JSON" | jq -r '.client_id // .token.client_id // empty')
-CLIENT_SECRET=$(echo "$CLASPRC_JSON" | jq -r '.client_secret // .token.client_secret // empty')
-REFRESH_TOKEN=$(echo "$CLASPRC_JSON" | jq -r '.refresh_token // .token.refresh_token // empty')
+# ── استخراج من كل البُنى المعروفة ──
+REFRESH_TOKEN=$(echo "$CLASPRC_JSON" | jq -r '
+  .tokens.default.refresh_token //
+  .refresh_token //
+  .token.refresh_token //
+  empty')
 
-test -n "$CLIENT_ID" && test -n "$CLIENT_SECRET" && test -n "$REFRESH_TOKEN" \
-  || { echo "::error::CLASPRC_JSON بنيته مش متوقعة — ابعت أسماء المفاتيح للمهندس"; exit 1; }
+CLIENT_ID=$(echo "$CLASPRC_JSON" | jq -r '
+  .tokens.default.client_id //
+  .client_id //
+  .oauth2ClientSettings.clientId //
+  empty')
 
+CLIENT_SECRET=$(echo "$CLASPRC_JSON" | jq -r '
+  .tokens.default.client_secret //
+  .client_secret //
+  .oauth2ClientSettings.clientSecret //
+  empty')
+
+# ── لو فشل الاستخراج — نطبع البنية (المسارات بس، القيم مخفية) ──
+if [ -z "$REFRESH_TOKEN" ] || [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
+  echo "::error::CLASPRC_JSON بنيته مش متوقعة"
+  echo ""
+  echo "📋 المسارات الموجودة في الملف (القيم مخفية — آمن للمشاركة):"
+  echo "$CLASPRC_JSON" | jq -r 'paths(scalars) | join(" → ")' | sort -u | head -30
+  echo ""
+  echo "📌 انسخ المسارات دي وابعتهاله — وهظبطلك السكربت فوراً"
+  exit 1
+fi
+
+# ── تبديل refresh token بـ access token ──
 RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
   -d "client_id=${CLIENT_ID}" \
   -d "client_secret=${CLIENT_SECRET}" \
@@ -30,12 +52,14 @@ test -n "$ACCESS_TOKEN" || {
   exit 1
 }
 
-# الـ Script ID من .clasp.json
+# ── الـ Script ID من .clasp.json ──
 test -f .clasp.json || { echo "::error::.clasp.json مش في الريبو"; exit 1; }
 SCRIPT_ID=$(jq -r '.scriptId' .clasp.json)
 test -n "$SCRIPT_ID" || { echo "::error::scriptId فاضي في .clasp.json"; exit 1; }
 
-# التصدير للخطوات التالية
-echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> "$GITHUB_ENV"
-echo "SCRIPT_ID=${SCRIPT_ID}" >> "$GITHUB_ENV"
-echo "✓ التوكن جاهز (مشروع: ${SCRIPT_ID:0:20}...)"
+# ── التصدير (في CI بس — محلياً بنجاح بس من غير تصدير) ──
+if [ -n "${GITHUB_ENV:-}" ]; then
+  echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> "$GITHUB_ENV"
+  echo "SCRIPT_ID=${SCRIPT_ID}" >> "$GITHUB_ENV"
+fi
+echo "✓ التوكن جاهز"
