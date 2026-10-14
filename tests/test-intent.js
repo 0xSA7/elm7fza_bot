@@ -155,3 +155,9 @@ test('يفك: "شريت 50 على الاكل" (بالـ "ال")', function() {
   expect(r.type).toBe('tx');
   expect(r.transactions[0].category).toBe('Food');
 });
+
+test('سؤال "قولي مصاريف النهارده" → تقرير اليوم (كلمة قولي)', function() {
+  var r = router.try('قولي مصاريف النهارده');
+  expect(r.type).toBe('command');
+  expect(r.cmd).toBe('today');
+});

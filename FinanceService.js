@@ -217,21 +217,50 @@ class FinanceService {
     return 'Date,Amount,Currency,Type,Category,Note\n' + csv.join('\n');
   }
 
+    // سياق موسّع للـ AI — ملخص + آخر المعاملات بالتفاصيل
   compactContextForAi() {
-    const rows = this.tx.getAll().filter(t => t.date.startsWith(DateUtils.month()));
+    const all = this.tx.getAll();
+    const rows = all.filter(t => t.date.startsWith(DateUtils.month()));
     let inc = 0, exp = 0;
+    const byCat = {};
     rows.forEach(t => {
       if (t.kind === 'income') inc += t.amount;
-      else if (t.kind === 'expense') exp += t.amount;
+      else if (t.kind === 'expense') {
+        exp += t.amount;
+        byCat[t.category] = (byCat[t.category] || 0) + t.amount;
+      }
     });
+
     let s = 'This month: real income ' + TextUtils.fmt(inc) + ', expenses ' + TextUtils.fmt(exp);
+
+    // التصنيفات
+    const catKeys = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]);
+    if (catKeys.length) {
+      s += '\nBy category: ' + catKeys.map(c => c + ' ' + TextUtils.fmt(byCat[c])).join(', ');
+    }
+
+    // 🔥 آخر 15 معاملة بالتفاصيل — ده اللي بيسمح للـ AI يجاوب أسئلة محددة
+    const recent = all
+      .filter(t => t.date.startsWith(DateUtils.month()) &&
+                   t.kind !== 'loan_in_off' && t.kind !== 'loan_out_off')
+      .slice(-15);
+    if (recent.length) {
+      s += '\n\nThis month transactions (oldest first):';
+      recent.forEach(t => {
+        s += '\n' + t.date + ' [' + t.kind + '] ' + TextUtils.fmt(t.amount) +
+            ' ' + t.category + (t.note ? ' (' + t.note + ')' : '');
+      });
+    }
+
+    // الديون
     const book = this.debtBook();
     const owed = Object.keys(book.owed).filter(p => book.owed[p] >= 0.5)
       .map(p => p + ' ' + TextUtils.fmt(book.owed[p])).join(', ');
     const due = Object.keys(book.due).filter(p => book.due[p] >= 0.5)
       .map(p => p + ' ' + TextUtils.fmt(book.due[p])).join(', ');
-    if (owed) s += '. He owes: ' + owed;
-    if (due) s += '. Owed to him: ' + due;
+    if (owed) s += '\nHe owes: ' + owed;
+    if (due) s += '\nOwed to him: ' + due;
+
     return s + '.';
   }
 }

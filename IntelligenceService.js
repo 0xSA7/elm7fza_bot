@@ -23,7 +23,7 @@ class IntelligenceService {
       'rules: EGP default; date≤today (امبارح=yesterday, اول الشهر=1st, month names = this year); word-numbers→digits (تلتمية=300); split multi-transactions; amounts>0; reply in user\'s language, confirmations ≤10 words\n' +
       'hist: record past-dated transactions with their REAL dates. Loans from OLD untracked cash (فلوس قديمة/خارج المحاسبة) → loan_out_off (debt book only, zero financial effect). Old pre-tracking debts on him → loan_in_off\n' +
       'ex: "كان معايا فلوس قديمة ومنها سلفت صاحبي ٢٠٠ يوم ٢٨ أغسطس" → loan_out_off, category صاحبي, correct past date\n' +
-      'if no transaction (question/chat): transactions=[] and reply=answer using context above (if data insufficient, say so briefly)';
+      'if no transaction (question/chat): transactions=[] and reply=answer from the Context above. For questions about specific spending (what did I spend on X, when did I buy Y), quote the actual transactions from Context with dates and notes. If data is insufficient, say so briefly and suggest /search or /last.\n';
     return this._tpl;
   }
 
