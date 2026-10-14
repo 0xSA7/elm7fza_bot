@@ -85,7 +85,9 @@ class RetryQueue extends SheetRepository {
             this.telegram.send(this.chatId, I18n.t('retryTimeout', this.lang.get()));
           } else {
             sh.getRange(rowIdx, 3).setValue(attempts + 1);
-            sh.getRange(rowIdx, 5).setValue(new Date(now + CONFIG.RETRY.INTERVAL_MS));
+            // ⏱️ Exponential backoff: دقيقة، دقيقتين، 3، 4، ثم سقف 5 دقايق
+            const backoffMs = Math.min(CONFIG.RETRY.INTERVAL_MS * (attempts + 1), 300000);
+            sh.getRange(rowIdx, 5).setValue(new Date(now + backoffMs));
           }
         } else {
           // خطأ حقيقي مختلف — مفيش إعادة محاولة
