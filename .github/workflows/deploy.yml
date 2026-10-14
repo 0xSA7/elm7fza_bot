@@ -20,6 +20,12 @@ jobs:
 
       - name: Make CI scripts executable
         run: chmod +x .ci/*.sh .ci/*.py
+        
+      - name: Run tests
+        run: |
+          echo "🧪 Running tests before deploy..."
+          node tests/run.js
+          echo "✓ All tests passed — safe to deploy"
 
       # ── المرحلة 1: الاعتماد ──
       - name: Auth — access token from clasp credentials
@@ -55,8 +61,7 @@ jobs:
       - name: Extract commit info
         run: |
           echo "COMMIT_MSG=$(git log -1 --pretty=%s | tr '\n' ' ')" >> "$GITHUB_ENV"
-          echo "APP_VERSION=$(grep -oE 'VERSION:[[:space:]]*[0-9]+' Config.gs | head -1 | grep -oE '[0-9]+')" >> "$GITHUB_ENV"
-
+          echo "APP_VERSION=$(grep -oE 'VERSION:[[:space:]]*[0-9]+' Config.js | head -1 | grep -oE '[0-9]+')" >> "$GITHUB_ENV"
       # ── المرحلة 7: التقرير ──
       - name: Notify — success report
         if: success()

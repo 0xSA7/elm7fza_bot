@@ -58,7 +58,12 @@ const CONFIG = {
       'دراسة':'Education','كتب':'Education','مدرسة':'Education','جامعة':'Education',
       'شخصي':'Personal','ايجار':'Home','اثاث':'Home',
       'food':'Food','coffee':'Outings','transport':'Transport','lunch':'Food'
-    }
+    },
+    SPEND_VERBS: ['صرفت', 'صرفت', 'دفعت', 'شريت', 'ولعت', 'وليت', 'خدت', 'اخدت',
+                  'spent', 'paid', 'bought'],
+    INCOME_VERBS: ['كسبت', 'حسنت', 'قبضت', 'حصلت', 'استلمت'],
+    UNITS: ['ج', 'جنيه', 'جنيها', 'جنيها', 'egp', ' leverage', 'pounds'],
+    PREPS: ['على', 'في', 'فل', 'عشان', 'ب', 'بال', 'وب', 'من', 'on', 'for', 'with', 'from']
   },
 
   KINDS: {
@@ -74,7 +79,7 @@ const CONFIG = {
   DEBT_KINDS: ['loan_in', 'repay_out'],   // حركات الدين اللي عليا
   LOAN_KINDS: ['loan_out', 'repay_in'],   // حركات السلف اللي ليا
 
-  GEMINI: { TEMPERATURE: 0.2, RETRIES: 2, RETRY_DELAY_MS: 3000, MAX_OUTPUT_TOKENS: 1500 },
+  GEMINI: { TEMPERATURE: 0.2, RETRIES: 1, RETRY_DELAY_MS: 3000, MAX_OUTPUT_TOKENS: 1500,FALLBACK_MODELS: ['gemini-2.5-flash', 'gemini-flash-latest'] },
   POLLING: { LIMIT: 50, LONG_POLL_SEC: 20, MAX_SESSION_MS: 50000 },
   PROMPT_KEY: 'EXTRACT_PROMPT',
   RETRY: { MAX_WAIT_MS: 900000, INTERVAL_MS: 60000, MAX_PER_CYCLE: 5 },
