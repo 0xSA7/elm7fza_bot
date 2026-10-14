@@ -173,6 +173,24 @@ function registerCommands(registry) {
       try { d.backup.syncTransactions(); } catch (e) {}
     })
     .register('search', (d, m, a) => send(d, m, d.finance.search(a), HTML))
+    .register('category', (d, m, a) => {
+      const cat = (a || '').trim();
+      if (!cat) return send(d, m, 'Usage: <code>/category Food</code> or <code>/category Other</code>', HTML);
+      const rows = d.txRepo.getAll().filter(t =>
+        t.category.toLowerCase().indexOf(cat.toLowerCase()) !== -1 &&
+        t.date.startsWith(DateUtils.month()));
+      if (!rows.length) return send(d, m, '📂 No transactions in "' + cat + '" this month');
+
+      let total = 0;
+      let text = '📂 <b>' + TextUtils.esc(cat) + ' — this month:</b>\n\n';
+      rows.forEach(t => {
+        total += t.amount;
+        text += '• ' + t.date + ' — ' + TextUtils.fmt(t.amount) + ' ' + t.currency +
+                (t.note ? ' (' + TextUtils.esc(t.note) + ')' : '') + '\n';
+      });
+      text += '\n💰 <b>Total:</b> ' + TextUtils.fmt(total) + ' EGP';
+      send(d, m, text, HTML);
+    })
     .register('dashboard', (d, m) => {
       const sh = d.dashboard.build();
       send(d, m, '📊 ' + (d.lang.get() === 'ar' ? 'الداشبورد اتحدّث' : 'Dashboard refreshed') +
