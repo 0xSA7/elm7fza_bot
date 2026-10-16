@@ -161,3 +161,20 @@ test('سؤال "قولي مصاريف النهارده" → تقرير اليو�
   expect(r.type).toBe('command');
   expect(r.cmd).toBe('today');
 });
+
+test('norm: يوحّد ة→ه ("جنية" → "جنيه")', function() {
+  expect(router.norm('جنية')).toBe('جنيه');
+});
+
+test('يفك: "صرفت 150 جنية مواصلات" (بـ ة مش ه)', function() {
+  var r = router.try('صرفت 150 جنية مواصلات');
+  expect(r.type).toBe('tx');
+  expect(r.transactions[0].amount).toBe(150);
+  expect(r.transactions[0].category).toBe('Transport');
+});
+
+test('يفك: "دفعت 50 جنيةة اكل" (ةة مزدوجة)', function() {
+  var r = router.try('دفعت 50 جنيه اكل');
+  expect(r.type).toBe('tx');
+  expect(r.transactions[0].category).toBe('Food');
+});

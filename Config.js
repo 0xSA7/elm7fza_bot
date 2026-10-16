@@ -80,7 +80,7 @@ const CONFIG = {
   DEBT_KINDS: ['loan_in', 'repay_out'],   // حركات الدين اللي عليا
   LOAN_KINDS: ['loan_out', 'repay_in'],   // حركات السلف اللي ليا
 
-  GEMINI: { TEMPERATURE: 0.2, RETRIES: 1, RETRY_DELAY_MS: 3000, MAX_OUTPUT_TOKENS: 1500,FALLBACK_MODELS: ['gemini-2.5-flash', 'gemini-flash-latest'] },
+  GEMINI: { TEMPERATURE: 0.2, RETRIES: 1, RETRY_DELAY_MS: 3000, MAX_OUTPUT_TOKENS: 1500,FALLBACK_MODELS: [ 'gemini-flash-latest', 'gemini-3.5-flash' ] },
   POLLING: { LIMIT: 50, LONG_POLL_SEC: 20, MAX_SESSION_MS: 50000 },
   PROMPT_KEY: 'EXTRACT_PROMPT',
   RETRY: { MAX_WAIT_MS: 900000, INTERVAL_MS: 60000, MAX_PER_CYCLE: 5 },

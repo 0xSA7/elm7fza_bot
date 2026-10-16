@@ -33,6 +33,7 @@ class IntentRouter {
       .replace(/(\d+(?:[.,]\d+)?)(ج|جنيه|egp)/g, '$1 $2')
       .replace(/[^\p{L}\p{N}\s]/gu, ' ')
       .replace(/\s+/g, ' ')
+      .replace(/ة/g, 'ه')    
       .trim();
   }
 
