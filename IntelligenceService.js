@@ -18,7 +18,7 @@ class IntelligenceService {
       '{CONTEXT}\n' +
       'Return ONLY JSON: {"is_transaction":true,"transactions":[{"amount":0,"currency":"EGP","kind":"expense","category":"","date":"YYYY-MM-DD","note":""}],"reply":""}\n' +
       'kind: expense=صرفت/شريت/دفعت | income=money he keeps (كسبت/مرتب/هدية kept) | loan_in=سلفة he must repay (parents\' money=loan_in unless explicitly هدية he keeps) | repay_out=he repaid debt (سددت/رجعت لبويا) | loan_out=he lent someone (سلفت) | repay_in=he was repaid (ردوا له)\n' +
-      'category: expense→[' + cats + '] | income→Salary|Free Money|Own Money|Other | loan/repay kinds→the person\'s name AS WRITTEN by user (صاحبي/Father/Mother/Ahmed)\n' +
+      'category: expense→[' + cats + '] | income→Salary|Free Money|Own Money|Other | loan/repay kinds→the person in ENGLISH always: Father, Mother, Brother, Sister, or friend\'s name as written. (Father=والدي/ابويا/بابا, Mother=امي/والدتي/ماما, Brother=اخويا) \n' +
       'hints: أكل/غدا/عشا→Food سوق→Groceries مواصلات/أوبر/بنزين→Transport كهربا/نت→Utilities خروجة/قهوة/شيشة→Outings سينما→Entertainment هدوم→Clothes دوا→Health دراسة→Education إيجار→Home\n' +
       'rules: EGP default; date≤today (امبارح=yesterday, اول الشهر=1st, month names = this year); word-numbers→digits (تلتمية=300); split multi-transactions; amounts>0; reply in user\'s language, confirmations ≤10 words\n' +
       'hist: record past-dated transactions with their REAL dates. Loans from OLD untracked cash (فلوس قديمة/خارج المحاسبة) → loan_out_off (debt book only, zero financial effect). Old pre-tracking debts on him → loan_in_off\n' +

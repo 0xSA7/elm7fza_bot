@@ -55,3 +55,17 @@ test('ExtractionResult: يفلتر المعاملات الفاضية', function(
   }, 'test', 1);
   expect(result.transactions.length).toBe(1);
 });
+
+test('PERSON_MAP: "امي" تتحول لـ Mother في المعاملات', function() {
+  var tx = Transaction.fromGemini(
+    { amount: 2000, kind: 'loan_in', category: 'امي' }, 'test', 1
+  );
+  expect(tx.category).toBe('Mother');
+});
+
+test('PERSON_MAP: أسماء الأصحاب مبتتغيرش', function() {
+  var tx = Transaction.fromGemini(
+    { amount: 200, kind: 'loan_out', category: 'ghan dy' }, 'test', 1
+  );
+  expect(tx.category).toBe('ghan dy');
+});

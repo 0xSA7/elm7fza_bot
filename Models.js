@@ -6,6 +6,9 @@ class Transaction {
     this.currency = f.currency || 'EGP';
     this.kind = CONFIG.KINDS[f.kind] ? f.kind : 'expense';   // أي قيمة غريبة → expense
     this.category = f.category || 'Other';
+    if (this.kind.indexOf('loan') !== -1 || this.kind.indexOf('repay') !== -1) {
+      this.category = CONFIG.PERSON_MAP[this.category] || this.category;
+    }
     this.note = f.note || '';
     this.rawText = f.rawText || '';
     this.messageId = f.messageId || '';
