@@ -290,6 +290,31 @@ function doctor() {
   }
 }
 
+// 🔧 شغّلها مرة واحدة — بتوحد أسماء العيلة في كل المعاملات القديمة
+function fixPersonNames() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const tx = ss.getSheetByName('Transactions');
+  if (!tx || tx.getLastRow() < 2) return;
+
+  const last = tx.getLastRow();
+  const data = tx.getRange(2, 1, last - 1, 9).getValues();
+  let fixed = 0;
+
+  for (let r = 0; r < data.length; r++) {
+    const kind = String(data[r][3]);
+    if (kind.indexOf('loan') !== -1 || kind.indexOf('repay') !== -1) {
+      const mapped = CONFIG.PERSON_MAP[String(data[r][4]).trim()];
+      if (mapped) { data[r][4] = mapped; fixed++; }
+    }
+  }
+  if (fixed > 0) tx.getRange(2, 1, last - 1, 9).setValues(data);
+
+  AppContext.backup().syncTransactions();
+  AppContext.telegram().send(AppContext.secrets().chatId,
+    '🔧 اتحول ' + fixed + ' اسم عيلة للإنجليزي (امي→Mother)\n/debts وشوف الدفتر الموحد 👀');
+  Logger.log('Fixed ' + fixed + ' person names');
+}
+
 function testFlow() {
   const ctx = AppContext, tg = ctx.telegram();
   Logger.log('1) TG send: ' + tg.api('sendMessage', { chat_id: ctx.secrets().chatId, text: '🔧 Test ✅' }).ok);

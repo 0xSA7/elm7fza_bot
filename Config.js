@@ -1,6 +1,6 @@
 // ═══════════════ الإعدادات — v27 ═══════════════
 const CONFIG = {
-  VERSION: 30,
+  VERSION: 31,
   MODEL: 'gemini-3.8-flash',
   SHEETS: {
     TX: 'Transactions', CATEGORIES: 'Categories', BUDGETS: 'Budgets',
@@ -27,6 +27,11 @@ const CONFIG = {
     'بيت': 'Home', 'صحة': 'Health', 'تعليم': 'Education', 'ترفيه': 'Outings',
     'ملابس': 'Clothes', 'هدايا': 'Gifts', 'شخصي': 'Personal', 'مرتب': 'Salary',
     'دخل إضافي': 'Free Money', 'غيره': 'Other'
+  },
+    PERSON_MAP: {
+    'امي': 'Mother', 'والدتي': 'Mother', 'ماما': 'Mother', 'اميا': 'Mother',
+    'ابويا': 'Father', 'والدي': 'Father', 'بابا': 'Father', 'ابي': 'Father',
+    'اخويا': 'Brother', 'اختي': 'Sister'
   },
 
   // 🧠 العقل المحلي — الحالات المؤكدة اللي مش محتاجة AI
