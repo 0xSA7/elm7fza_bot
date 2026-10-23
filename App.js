@@ -303,8 +303,9 @@ function fixPersonNames() {
   for (let r = 0; r < data.length; r++) {
     const kind = String(data[r][3]);
     if (kind.indexOf('loan') !== -1 || kind.indexOf('repay') !== -1) {
-      const mapped = CONFIG.PERSON_MAP[String(data[r][4]).trim()];
-      if (mapped) { data[r][4] = mapped; fixed++; }
+      const old = String(data[r][4] || '').trim();
+      const mapped = canonicalPerson(old);          // ✅ الاسم قاعد في data[r][4] مش row.person
+      if (mapped && mapped !== old) { data[r][4] = mapped; fixed++; }
     }
   }
   if (fixed > 0) tx.getRange(2, 1, last - 1, 9).setValues(data);

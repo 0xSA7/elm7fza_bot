@@ -78,6 +78,7 @@ const DateUtils = {
 };
 
 const TextUtils = {
+  
   fmt(n) { return Math.round(Number(n) || 0).toLocaleString('en-US'); },
   esc(s) {
     return String(s == null ? '' : s)
@@ -93,8 +94,42 @@ const TextUtils = {
   buttonKey(s) {
     return String(s).replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();
   }
-};
+};/**
+ * Canonical person name:
+ *   1. Arabic family variants -> canonical (امي -> Mother)
+ *   2. Any casing of a canonical name -> canonical (mother -> Mother)
+ * Non-family names pass through untouched (sensei stays sensei).
+ * Works whether PERSON_MAP is top-level or CONFIG.PERSON_MAP.
+ */
+function _personMap() {
+  if (typeof PERSON_MAP !== 'undefined' && PERSON_MAP) return PERSON_MAP;
+  if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.PERSON_MAP) return CONFIG.PERSON_MAP;
+  return {};
+}
 
+let _personCiIndexCache = null;
+function _personCiIndex() {
+  if (_personCiIndexCache) return _personCiIndexCache;
+  const map = _personMap();
+  const idx = {};
+  Object.keys(map).forEach(function (k) {
+    idx[k.toLowerCase()] = map[k];
+    idx[String(map[k]).toLowerCase()] = map[k];
+  });
+  _personCiIndexCache = idx;
+  return idx;
+}
+
+function canonicalPerson(raw) {
+  if (raw === null || raw === undefined) return raw;
+  const name = String(raw).trim();
+  if (!name) return name;
+  const map = _personMap();
+  const normalized = (typeof norm === 'function') ? norm(name) : name;
+  const direct = map[name] || map[normalized];
+  if (direct) return direct;
+  return _personCiIndex()[name.toLowerCase()] || name;
+}
 class UpdateDeduper {
   constructor(props) { this.props = props; }
   seen(updateId) {
