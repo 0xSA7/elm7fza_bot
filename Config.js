@@ -1,6 +1,6 @@
 // ═══════════════ الإعدادات — v27 ═══════════════
 const CONFIG = {
-  VERSION: 32,
+  VERSION: 33,
   MODEL: 'gemini-3.8-flash',
   SHEETS: {
     TX: 'Transactions', CATEGORIES: 'Categories', BUDGETS: 'Budgets',

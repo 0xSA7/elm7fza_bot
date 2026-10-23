@@ -5,9 +5,10 @@ class Transaction {
     this.amount = Number(f.amount) || 0;
     this.currency = f.currency || 'EGP';
     this.kind = CONFIG.KINDS[f.kind] ? f.kind : 'expense';   // أي قيمة غريبة → expense
+    this.person = canonicalPerson(f.person);                 // ✅ f.person مش rawPerson
     this.category = f.category || 'Other';
     if (this.kind.indexOf('loan') !== -1 || this.kind.indexOf('repay') !== -1) {
-      this.category = CONFIG.PERSON_MAP[this.category] || this.category;
+      this.category = canonicalPerson(this.category);        // ✅ أي casing + أي مكان للـ PERSON_MAP
     }
     this.note = f.note || '';
     this.rawText = f.rawText || '';
@@ -19,6 +20,7 @@ class Transaction {
     return new Transaction({
       date: DateUtils.normalizeIso(data.date),
       amount: data.amount, currency: data.currency, kind: data.kind,
+      person: data.person,                     // ✅ جديد: لو جيميناي بعت person منفصل
       category: data.category, note: data.note,
       rawText: rawText, messageId: messageId
     });
