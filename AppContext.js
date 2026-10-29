@@ -35,7 +35,10 @@ const AppContext = {
   dashboard() { return this._cache.dash || (this._cache.dash = new DashboardService(this.categoryRepo(), this.txRepo())); },
   brain()     { return this._cache.brain || (this._cache.brain = new IntentRouter(this.lang(), this.finance())); },
 
-  finance() { return this._cache.fin || (this._cache.fin = new FinanceService(this.txRepo(), this.budgetRepo(), this.lang()), this.runwayRepo()); },
+  finance() {
+    return this._cache.fin ||
+        (this._cache.fin = new FinanceService(this.txRepo(), this.budgetRepo(), this.lang(), this.runwayRepo()));
+  },
   ai()      { return this._cache.int || (this._cache.int = new IntelligenceService(
                 this.gemini(), this.promptRepo(), this.categoryRepo(), this.telegram(),
                 this.finance(), this.lang())); },

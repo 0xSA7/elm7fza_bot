@@ -1,7 +1,7 @@
 // ═══════════════ منطق المالية — دخل حقيقي منفصل عن الديون ═══════════════
 class FinanceService {
   constructor(txRepo, budgetRepo, langService, runwayRepo) {
-    this.tx = txRepo; this.budgets = budgetRepo; this.i18n = langService; this.runway = runwayRepo;
+    this.tx = txRepo; this.budgets = budgetRepo; this.i18n = langService; this.runway = runwayRepo || null;
   }
   t(key, params) { return I18n.t(key, this.i18n.get(), params); }
 

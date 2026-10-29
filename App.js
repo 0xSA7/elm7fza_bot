@@ -288,6 +288,11 @@ function doctor() {
   } catch (e) {
     Logger.log('Doctor فشل في الإرسال: ' + e + '\n\n' + report);
   }
+  check('Wiring: finance() بترجع FinanceService', function () {
+    const f = AppContext.finance();
+    if (typeof f.today !== 'function' || typeof f.runwayStatus !== 'function')
+        throw new Error('finance() راجع ' + ((f && f.constructor && f.constructor.name) || 'حاجة غلط'));
+});
 }
 
 // 🔧 شغّلها مرة واحدة — بتوحد أسماء العيلة في كل المعاملات القديمة

@@ -25,7 +25,7 @@ class PollingEngine {
           } catch (err) {
             if (isTransient(err)) {
               // ⏳ جيميناي overloaded → طابور، مش فشل نهائي
-              this.retryQueue.enqueue(upd);
+              this.retryQueue.enqueue(upd, err);
             } else {
               this.reportError(err, upd);
             }
