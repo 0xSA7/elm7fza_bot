@@ -18,7 +18,7 @@ class GeminiClient {
       } catch (e) {
         if (e instanceof HighDemandError) {
           if (m < this.models.length - 1) {
-            this.log.warn('MODEL_FALLBACK', model + ' مشغول → تجربة ' + this.models[m + 1], '');
+            this.log.warn('MODEL_FALLBACK', model + ' مشغول (' + e.message + ') → تجربة ' + this.models[m + 1], '');          
           }
           lastError = e;
           continue;    // الموديل الجاي فوراً — من غير انتظار

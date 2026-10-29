@@ -11,7 +11,7 @@ class RetryQueue extends SheetRepository {
   }
 
   // إضافة رسالة فاشلة — مع إشعار واضح مرة واحدة بس
-  enqueue(update) {
+  enqueue(update,err) {
     try {
       if (this.findRow(update.update_id) !== -1) return;   // محطوطة قبل كده
       this.append([
@@ -21,8 +21,8 @@ class RetryQueue extends SheetRepository {
         new Date(),
         new Date(Date.now() + CONFIG.RETRY.INTERVAL_MS)
       ]);
-      this.log.warn('RETRY_QUEUED', 'AI busy — queued for auto-retry',
-                    { updateId: update.update_id });
+      const why = String((err && err.message) || err || 'unknown').slice(0, 120);
+      this.log.warn('RETRY_QUEUED', 'اتأجّل: ' + why, { updateId: update.update_id });
       this.telegram.send(this.chatId, I18n.t('aiBusyQueued', this.lang.get()));
     } catch (e) {
       this.log.error('RETRY_ENQUEUE: ' + e, 'فشل الإضافة للطابور', '');
@@ -86,7 +86,7 @@ class RetryQueue extends SheetRepository {
           } else {
             sh.getRange(rowIdx, 3).setValue(attempts + 1);
             // ⏱️ Exponential backoff: دقيقة، دقيقتين، 3، 4، ثم سقف 5 دقايق
-            const backoffMs = Math.min(CONFIG.RETRY.INTERVAL_MS * (attempts + 1), 300000);
+            const backoffMs = Math.min(CONFIG.RETRY.INTERVAL_MS * (attempts + 1), 1800000);
             sh.getRange(rowIdx, 5).setValue(new Date(now + backoffMs));
           }
         } else {

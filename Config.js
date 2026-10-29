@@ -1,6 +1,6 @@
 // ═══════════════ الإعدادات — v27 ═══════════════
 const CONFIG = {
-  VERSION: 34,
+  VERSION: 35,
   MODEL: 'gemini-3.8-flash',
   SHEETS: {
     TX: 'Transactions', CATEGORIES: 'Categories', BUDGETS: 'Budgets',
@@ -89,7 +89,7 @@ const CONFIG = {
   GEMINI: { TEMPERATURE: 0.2, RETRIES: 1, RETRY_DELAY_MS: 3000, MAX_OUTPUT_TOKENS: 1500,FALLBACK_MODELS: [ 'gemini-flash-latest', 'gemini-3.5-flash' ] },
   POLLING: { LIMIT: 50, LONG_POLL_SEC: 20, MAX_SESSION_MS: 50000 },
   PROMPT_KEY: 'EXTRACT_PROMPT',
-  RETRY: { MAX_WAIT_MS: 900000, INTERVAL_MS: 60000, MAX_PER_CYCLE: 5 },
+  RETRY: { MAX_WAIT_MS: 43200000, INTERVAL_MS: 60000, MAX_PER_CYCLE: 5 },
   BACKUP: {
     FOLDER_NAME: 'WalletBot DB',
     TX_FILE: 'transactions.jsonl',
