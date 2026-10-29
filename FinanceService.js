@@ -12,7 +12,8 @@ class FinanceService {
       ? this.t('savedOne') : this.t('savedMany', { n: transactions.length });
     let text = '✅ ' + head + ':\n' + transactions.map(t => t.displayLine(lang)).join('\n');
     const warn = this.budgetWarnings(transactions);
-    const rw = this.runway.getLine();
+    // ← الميثود الجاهزة اللي بترجع سطر العداد كامل (أو '' لو مفيش عداد)
+    const rw = this.runwayLine();
     if (rw) text += '\n\n' + rw;
     if (warn) text += '\n\n' + warn;
     return text;
@@ -160,7 +161,48 @@ class FinanceService {
     return out;
   }
 
-  today() { return this.report(this.t('today') + ' ' + DateUtils.today(), d => d === DateUtils.today()); }
+// 🌙 الرسالة اليومية — عداد + ميزانية بكرة (النصوص كلها في STR)
+  today() {
+      const t0 = DateUtils.today();
+      const WD = ['الأحد', 'الاتنين', 'التلات', 'الأربع', 'الخميس', 'الجمعة', 'السبت'];
+      const dm = t0.slice(8, 10) + '/' + t0.slice(5, 7);
+
+      let spent = 0, income = 0;
+      const byCat = {};
+      this.tx.getAll().forEach(t => {
+          if (t.date !== t0) return;
+          if (t.kind === 'expense') { spent += t.amount; byCat[t.category] = (byCat[t.category] || 0) + t.amount; }
+          else if (t.kind === 'income') income += t.amount;
+      });
+      const cats = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]);
+
+      const L = [];
+      L.push('📅 ' + WD[new Date().getDay()] + ' ' + dm + ' ' +
+          (spent ? this.t('dSpent', { v: TextUtils.fmt(spent) }) : this.t('dNoSpend')));
+      cats.forEach(c => L.push('• ' + this.catLabel(c) + ': ' + TextUtils.fmt(byCat[c]) + 'ج'));
+      if (income) L.push(this.t('dIncome', { v: TextUtils.fmt(income) }));
+
+      const rw = this.runwayStatus();          // ✈️ نفس حسابات /runway بالظبط
+      if (rw) {
+          const e = String(rw.end);
+          L.push('');
+          L.push(this.t('dRemain', { end: e.slice(8, 10) + '/' + e.slice(5, 7), v: TextUtils.fmt(rw.remaining) }));
+          L.push(this.t('dAllow', { v: TextUtils.fmt(rw.allowed), n: rw.daysLeft }));
+          L.push(rw.burn <= rw.allowed ? this.t('dOnTrack') : this.t('dOverBurn', { v: TextUtils.fmt(rw.burn) }));
+      } else {
+          L.push('');
+          L.push(this.t('dNoRunway', { today: t0 }));
+      }
+      return L.join('\n');
+  }
+
+  // أسماء التصنيفات بالعربي — من مفاتيح cat* في STR، مع fallback للاسم الأصلي
+  catLabel(c) {
+      try {
+          const s = this.t('cat' + String(c).replace(/[^A-Za-z]/g, ''));
+          return (s && String(s).indexOf('cat') !== 0) ? s : c;
+      } catch (e) { return c; }
+  }
   week()  { return this.report(this.t('last7'), d => d >= DateUtils.today(-6)); }
   month() { return this.report(this.t('thisMonth') + ' (' + DateUtils.month() + ')', d => d.startsWith(DateUtils.month())); }
   stats() { return this.monthlyTrend(3) + '\n\n' + this.report(this.t('thisMonth'), d => d.startsWith(DateUtils.month())); }
