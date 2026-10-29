@@ -1,6 +1,6 @@
 // ═══════════════ طابور المحاولات التلقائية ═══════════════
 // لو جيميناي عليها ضغط (429/503): الرسالة بتتحفظ هنا بدل ما تفشل نهائياً،
-// وبتتحاول تاني كل دقيقة لحد ١٥ دقيقة — والإشعار بيوصلك لوحده.
+// وبتتحاول تاني بتباعد تدريجي لحد ١٢ ساعة — والإشعار بيوصلك لوحده.
 class RetryQueue extends SheetRepository {
   constructor(telegram, chatId, log, lang) {
     super(CONFIG.SHEETS.RETRY, CONFIG.RETRY_HEADERS);
@@ -40,7 +40,7 @@ class RetryQueue extends SheetRepository {
   // معالجة المستحق — بقفل عشان تنفيذين متوازيين ميعملوش نفس الرسالة مرتين
   processDue(dispatcher) {
     const lock = LockService.getScriptLock();
-    if (!lock.tryLock(2000)) return;   // تنفيذ تاني بي顾ول فيها — تمام كده
+    if (!lock.tryLock(2000)) return;   // تنفيذ تاني شغّال فيها — تمام كده
     try {
       this.processDueLocked(dispatcher);
     } finally {
@@ -67,7 +67,7 @@ class RetryQueue extends SheetRepository {
       const attempts = Number(data[i][2]) || 0;
       handled++;
 
-      // عدّى الـ ١٥ دقيقة؟ نستلم ونبلغ
+      // عدّى الـ ١٢ ساعة؟ نستلم ونبلغ
       if (now - firstTry > CONFIG.RETRY.MAX_WAIT_MS) {
         this.finishRow(rowIdx, 'RETRY_TIMEOUT', attempts);
         this.telegram.send(this.chatId, I18n.t('retryTimeout', this.lang.get()));
@@ -85,7 +85,7 @@ class RetryQueue extends SheetRepository {
             this.telegram.send(this.chatId, I18n.t('retryTimeout', this.lang.get()));
           } else {
             sh.getRange(rowIdx, 3).setValue(attempts + 1);
-            // ⏱️ Exponential backoff: دقيقة، دقيقتين، 3، 4، ثم سقف 5 دقايق
+            // ⏱️ Exponential backoff: دقيقة، دقيقتين، 3، 4، ثم سقف ٣٠ دقيقة
             const backoffMs = Math.min(CONFIG.RETRY.INTERVAL_MS * (attempts + 1), 1800000);
             sh.getRange(rowIdx, 5).setValue(new Date(now + backoffMs));
           }

@@ -10,6 +10,10 @@ class PollingEngine {
   }
 
   poll() {
+    // 🔒 قفل عالمي: دورة واحدة بس في نفس اللحظة — عشان الرسالة ماتتعالجش مرتين
+    //    (الـ AI ممكن ياخد دقايق وهو مشغول — من غير القفل دورة تانية بترجع تسحب نفس الرسالة)
+    const lock = LockService.getScriptLock();
+    if (!lock.tryLock(0)) return;   // في دورة شغالة بالفعل — نمشي في سلام
     try {
       const started = Date.now();
       let offset = Number(this.props.getProperty('POLL_OFFSET') || 0);
@@ -20,18 +24,20 @@ class PollingEngine {
         if (!updates.length) break;
 
         updates.forEach(upd => {
+          // 🔁 نأكد السحب ل تليجرام قبل المعالجة — أي دورة تانية متجيبش نفس الرسالة،
+          //    ولو المعالجة وقعت الرسالة بتنزل الطابور (12 ساعة) مش بتضيع
+          offset = upd.update_id + 1;
+          this.props.setProperty('POLL_OFFSET', String(offset));
           try {
             this.dispatcher.process(upd);
           } catch (err) {
             if (isTransient(err)) {
-              // ⏳ جيميناي overloaded → طابور، مش فشل نهائي
+              // ⏳ جيميناي overloaded / شبكة → طابور، مش فشل نهائي
               this.retryQueue.enqueue(upd, err);
             } else {
               this.reportError(err, upd);
             }
           }
-          offset = upd.update_id + 1;
-          this.props.setProperty('POLL_OFFSET', String(offset));
         });
 
         if (Date.now() - started >= CONFIG.POLLING.MAX_SESSION_MS) break;
@@ -45,9 +51,11 @@ class PollingEngine {
       }
       this.log.error('POLL: ' + ((e && e.message) || e), 'خطأ في دورة السحب', '');
     } finally {
-      try { this.retryQueue.processDue(this.dispatcher); }
+      // ⏳ الطابور جوه نفس القفل — مفيش محاولتين متوازيتين على نفس الرسالة أبداً
+      try { this.retryQueue.processDueLocked(this.dispatcher); }
       catch (e) { this.log.error('RETRY_CYCLE: ' + e, 'خطأ في معالجة الطابور', ''); }
       this.dispatcher.flushBackup();   // 💾 مزامنة واحدة للدورة كلها
+      lock.releaseLock();             // 🔒 فتح القفل في كل الحالات
     }
   }
 
