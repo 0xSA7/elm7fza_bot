@@ -61,6 +61,7 @@ class ExtractionResult {
     parsed = parsed || {};
     this.isTransaction = !!parsed.is_transaction;
     this.reply = parsed.reply || '';
+    this.runwayUntil = parsed.runway_until || null;   // ✈️ "لحد آخر الشهر الجاي"
     this.transactions = (parsed.transactions || [])
       .filter(t => t && Number(t.amount) > 0)
       .map(t => Transaction.fromGemini(t, rawText, messageId));

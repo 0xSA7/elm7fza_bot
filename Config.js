@@ -1,11 +1,12 @@
 // ═══════════════ الإعدادات — v27 ═══════════════
 const CONFIG = {
-  VERSION: 33,
+  VERSION: 34,
   MODEL: 'gemini-3.8-flash',
   SHEETS: {
     TX: 'Transactions', CATEGORIES: 'Categories', BUDGETS: 'Budgets',
     LOG: 'Log', PROMPTS: 'Prompts', DASHBOARD: 'Dashboard',
-    RETRY: 'RetryQueue'
+    RETRY: 'RetryQueue',
+    RUNWAY_HEADERS: ['Status', 'Start', 'End', 'Amount', 'Updated At'],
   },
   TX_HEADERS: ['Date', 'Amount', 'Currency', 'Type', 'Category', 'Note',
                'Original Message', 'Message ID', 'Created At'],
@@ -100,11 +101,11 @@ const CONFIG = {
 };
 
 const CHANGELOG = {
-  30: '🔷 <b>Version 30 — السلف خارج الدفتر + إصلاح الوقفة</b>\n\n' +
-      '• /lentold و /borrowedold — ديون من فلوس قديمة غير متتبعة.\n' +
-      '• إصلاح: الرسايل النصية كانت بتهاجر (توصيلة العقل المحلي).\n' +
-      '• إصلاح: رسالة تعليمات الأوامر لما الصيغة تغلط.\n' +
-      '• setupMenuCommands — تسجيل كل الأوامر في منيو تليجرام 📋'
+  34: '✈️ <b>Version 34 — العداد + صيانة الشبكة</b>\n\n' +
+      '• ✈️ /runway — فلوسك لحد تاريخ محدد + سماح يومي بعد كل معاملة.\n' +
+      '• إصلاح: أخطاء الشبكة بقت محاولة تلقائية بدل رسالة ضايعة.\n' +
+      '• إصلاح: الرسالة اللي وقعت في نصها بترجع تتسحب تاني.\n' +
+      '• 🔒 التوكن مش بيتكتب في اللوج أبداً.',
 };
 
 const STR = {
@@ -165,7 +166,11 @@ const STR = {
   debtCmdUsage: { ar: '⚠️ الصيغة: {cmd} <الاسم> <المبلغ> [التاريخ YYYY-MM-DD]\nمثال: <code>{cmd} صاحبي 200 2026-08-28</code>', en: '⚠️ Usage: {cmd} <name> <amount> [date YYYY-MM-DD]\nExample: <code>{cmd} John 200 2026-08-28</code>' },
   kLoanOutOff: { ar: 'سلفة قديمة — من فلوس خارج التتبع', en: 'off-book loan (old untracked cash)' },
   kLoanInOff:  { ar: 'دين قديم — من قبل التتبع', en: 'off-book debt (pre-tracking)' },
-  debtCmdUsage: { ar: '⚠️ الصيغة: {cmd} &lt;الاسم&gt; &lt;المبلغ&gt; [التاريخ YYYY-MM-DD]\nمثال: <code>{cmd} صاحبي 200 2026-08-28</code>', en: '⚠️ Usage: {cmd} &lt;name&gt; &lt;amount&gt; [date YYYY-MM-DD]\nExample: <code>{cmd} John 200 2026-08-28</code>' }
+  debtCmdUsage: { ar: '⚠️ الصيغة: {cmd} &lt;الاسم&gt; &lt;المبلغ&gt; [التاريخ YYYY-MM-DD]\nمثال: <code>{cmd} صاحبي 200 2026-08-28</code>', en: '⚠️ Usage: {cmd} &lt;name&gt; &lt;amount&gt; [date YYYY-MM-DD]\nExample: <code>{cmd} John 200 2026-08-28</code>' },
+  runwaySet:    { ar: 'العداد اشتغل — فلوسك محسوبة لحد {end}', en: 'Runway set until {end}' },
+  runwayNone:   { ar: 'مفيش عداد شغال. شغّله: <code>/runway 2026-10-28 2026-11-30</code>', en: 'No active runway. Try <code>/runway 2026-10-28 2026-11-30</code>' },
+  runwayCancel: { ar: '📴 العداد اتلغى', en: 'Runway cancelled' },
+  runwayLine:   { ar: '✈️ باقي {left} — سماحك {daily} ج/يوم لحد {end} {icon}', en: '✈️ {left} left — {daily}/day until {end} {icon}' },
 };
 
 const MESSAGES = {
@@ -235,5 +240,6 @@ const BUTTONS = {
     { command: 'lentold',      description: 'Old off-book loan: /lentold name 200 [date]' },
     { command: 'borrowedold',  description: 'Old off-book debt: /borrowedold name 500' },
     { command: 'getprompt',    description: 'Show the stored AI prompt' },
-    { command: 'setprompt',    description: 'Edit the AI prompt' }
+    { command: 'setprompt',    description: 'Edit the AI prompt' },
+    { command: 'runway',        description: 'Money until a date: /runway 2026-10-28 2026-11-30' },
   ]

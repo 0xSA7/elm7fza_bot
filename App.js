@@ -326,3 +326,15 @@ function testFlow() {
   Logger.log('5) Dashboard rebuilt');
   Logger.log('6) Month report:\n' + ctx.finance().month());
 }
+// ✈️ شغّلها مرة بعد التحديث — بيمسح البرومبت المخزن عشان يتولد بقاعدة العداد الجديدة
+function migrateToV31() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const pr = ss.getSheetByName('Prompts');
+  if (pr && pr.getLastRow() >= 2) {
+    const data = pr.getRange(2, 1, pr.getLastRow() - 1, 2).getValues();
+    for (let i = 0; i < data.length; i++) {
+      if (String(data[i][0]).trim() === CONFIG.PROMPT_KEY) { pr.deleteRow(i + 2); break; }
+    }
+  }
+  Logger.log('V31 done — البرومبت بقاعدة العداد هيتولد مع أول رسالة ✅');
+}

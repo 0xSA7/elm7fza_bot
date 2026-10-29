@@ -33,7 +33,12 @@ class FileDownloadError extends BotError {
     this.name = 'FileDownloadError';
   }
 }
-
+function isTransient(err) {
+  if (err instanceof HighDemandError) return true;   // 429/503 ضغط على جيميناي
+  if (err instanceof GeminiError) return true;       // أخطاء HTTP من جيميناي
+  if (err instanceof BotError) return false;         // أخطاء منطقية عندنا
+  return true;                                       // أخطاء شبكة خام (Address unavailable...)
+}
 // ── الترجمة: مفتاح → نص حسب اللغة ──
 const I18n = {
   t(key, lang, params) {
@@ -135,15 +140,18 @@ class UpdateDeduper {
   seen(updateId) {
     if (!updateId) return false;
     try {
-      const cache = CacheService.getScriptCache();
-      const key = 'upd_' + updateId;
-      if (cache.get(key)) return true;
+      if (CacheService.getScriptCache().get('upd_' + updateId)) return true;
       const last = Number(this.props.getProperty('LAST_UPDATE_ID') || 0);
-      if (updateId === last) { cache.put(key, '1', 600); return true; }
-      if (updateId > last) this.props.setProperty('LAST_UPDATE_ID', String(updateId));
-      cache.put(key, '1', 600);
-      return false;
+      return updateId < last;
     } catch (e) { return false; }
+  }
+  mark(updateId) {
+    if (!updateId) return;
+    try {
+      CacheService.getScriptCache().put('upd_' + updateId, '1', 600);
+      const last = Number(this.props.getProperty('LAST_UPDATE_ID') || 0);
+      if (updateId > last) this.props.setProperty('LAST_UPDATE_ID', String(updateId));
+    } catch (e) {}
   }
 }
 

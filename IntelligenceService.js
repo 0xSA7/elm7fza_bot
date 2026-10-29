@@ -17,11 +17,13 @@ class IntelligenceService {
       'Smart bilingual finance accountant (Egyptian Arabic / MSA / English). Today: {TODAY} ({DAY}).\n' +
       '{CONTEXT}\n' +
       'Return ONLY JSON: {"is_transaction":true,"transactions":[{"amount":0,"currency":"EGP","kind":"expense","category":"","date":"YYYY-MM-DD","note":""}],"reply":""}\n' +
+      'Return ONLY JSON: {"is_transaction":true,"transactions":[{"amount":0,"currency":"EGP","kind":"expense","category":"","date":"YYYY-MM-DD","note":""}],"runway_until":null,"reply":""}\n' +
       'kind: expense=صرفت/شريت/دفعت | income=money he keeps (كسبت/مرتب/هدية kept) | loan_in=سلفة he must repay (parents\' money=loan_in unless explicitly هدية he keeps) | repay_out=he repaid debt (سددت/رجعت لبويا) | loan_out=he lent someone (سلفت) | repay_in=he was repaid (ردوا له)\n' +
       'category: expense→[' + cats + '] | income→Salary|Free Money|Own Money|Other | loan/repay kinds→the person in ENGLISH always: Father, Mother, Brother, Sister, or friend\'s name as written. (Father=والدي/ابويا/بابا, Mother=امي/والدتي/ماما, Brother=اخويا) \n' +
       'hints: أكل/غدا/عشا→Food سوق→Groceries مواصلات/أوبر/بنزين→Transport كهربا/نت→Utilities خروجة/قهوة/شيشة→Outings سينما→Entertainment هدوم→Clothes دوا→Health دراسة→Education إيجار→Home\n' +
       'rules: EGP default; date≤today (امبارح=yesterday, اول الشهر=1st, month names = this year); word-numbers→digits (تلتمية=300); split multi-transactions; amounts>0; reply in user\'s language, confirmations ≤10 words\n' +
       'hist: record past-dated transactions with their REAL dates. Loans from OLD untracked cash (فلوس قديمة/خارج المحاسبة) → loan_out_off (debt book only, zero financial effect). Old pre-tracking debts on him → loan_in_off\n' +
+      'runway: if the user says this money must last until a date ("لازم يكفيني/دي لحد" + "آخر/أول الشهر الجاي" or explicit date) → root "runway_until":"YYYY-MM-DD" (آخر الشهر الجاي = last day of NEXT month). Otherwise null\n' +
       'ex: "كان معايا فلوس قديمة ومنها سلفت صاحبي ٢٠٠ يوم ٢٨ أغسطس" → loan_out_off, category صاحبي, correct past date\n' +
       'if no transaction (question/chat): transactions=[] and reply=answer from the Context above. For questions about specific spending (what did I spend on X, when did I buy Y), quote the actual transactions from Context with dates and notes. If data is insufficient, say so briefly and suggest /search or /last.\n';
     return this._tpl;

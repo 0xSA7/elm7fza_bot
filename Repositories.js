@@ -1,4 +1,5 @@
 // ═══════════════ طبقة التخزين — التعامل مع الشيت بس ═══════════════
+const TOKEN_SCRUB = /bot\d+:[A-Za-z0-9_-]{20,}/g;
 class SheetRepository {
   constructor(name, headers) { this.name = name; this.headers = headers; }
   open() {
@@ -80,6 +81,36 @@ class PromptRepository extends SheetRepository {
     return true;
   }
 }
+class RunwayRepository extends SheetRepository {
+  constructor() { super(CONFIG.SHEETS.RUNWAY, CONFIG.RUNWAY_HEADERS); }
+
+  getActive() {
+    const rows = this.readAll();
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (String(rows[i][0]) === 'active') {
+        return {
+          start: DateUtils.normalizeIso(DateUtils.normalizeCell(rows[i][1])),
+          end:   DateUtils.normalizeIso(DateUtils.normalizeCell(rows[i][2])),
+          amount: Number(rows[i][3]) || 0
+        };
+      }
+    }
+    return null;
+  }
+
+  set(start, end, amount) {
+    this.closeAll();
+    this.append(['active', start, end, amount, new Date()]);
+  }
+
+  closeAll() {
+    const sh = this.open(), last = sh.getLastRow();
+    if (last < 2) return;
+    const data = sh.getRange(2, 1, last - 1, 1).getValues();
+    for (let i = 0; i < data.length; i++)
+      if (String(data[i][0]) === 'active') sh.getRange(i + 2, 1).setValue('done');
+  }
+}
 
 // 📝 اللوق الجديد: structured + بيسجل كل حاجة + Rotation بأرشفة في درايف
 class LogRepository extends SheetRepository {
@@ -102,8 +133,8 @@ class LogRepository extends SheetRepository {
       this.append([
         new Date(), level, event, status,
         opts.updateId || '', opts.lang || '',
-        String(details || '').slice(0, 300),
-        String(opts.raw || '').slice(0, 300)
+        String(details || '').replace(TOKEN_SCRUB, '[SCRUBBED]'),
+        String(opts.raw || '').replace(TOKEN_SCRUB, '[SCRUBBED]')
       ]);
     } catch (x) {}
     this.trim();

@@ -32,26 +32,32 @@ class GeminiClient {
   attemptWithModel(model, parts, opts) {
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
                 model + ':generateContent?key=' + this.apiKey;
-
-    const res = UrlFetchApp.fetch(url, {
-      method: 'post', contentType: 'application/json',
-      payload: JSON.stringify({
-        contents: [{ parts: parts }],
-        generationConfig: {
-          temperature: CONFIG.GEMINI.TEMPERATURE,
-          maxOutputTokens: CONFIG.GEMINI.MAX_OUTPUT_TOKENS,
-          responseMimeType: opts.plainText ? 'text/plain' : 'application/json'
-        }
-      }),
-      muteHttpExceptions: true
-    });
+    let res;
+    try {
+      res = UrlFetchApp.fetch(url, {
+        method: 'post', contentType: 'application/json',
+        payload: JSON.stringify({
+          contents: [{ parts: parts }],
+          generationConfig: {
+            temperature: CONFIG.GEMINI.TEMPERATURE,
+            maxOutputTokens: CONFIG.GEMINI.MAX_OUTPUT_TOKENS,
+            responseMimeType: opts.plainText ? 'text/plain' : 'application/json'
+          }
+        }),
+        muteHttpExceptions: true
+      });
+    } catch (netErr) {
+      // 🌐 Address unavailable / DNS / قطع شبكة → كأنه ضغط → فولباك + طابور
+      throw new HighDemandError('NET: ' + String((netErr && netErr.message) || netErr).slice(0, 80) + ' @ ' + model);
+    }
 
     const status = res.getResponseCode();
     const body = res.getContentText();
 
     if (status === 200) return this.extract(res, opts.plainText);
 
-    const highDemand = status === 429 || status === 503 ||
+    const highDemand = status === 429 || status === 500 || status === 502 ||
+                       status === 503 || status === 504 ||
                        body.indexOf('high demand') !== -1 ||
                        body.indexOf('RESOURCE_EXHAUSTED') !== -1;
     if (highDemand) throw new HighDemandError('HTTP ' + status + ' @ ' + model);
