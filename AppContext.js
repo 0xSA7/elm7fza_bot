@@ -17,6 +17,7 @@ const AppContext = {
   txRepo()       { return this._cache.txRepo   || (this._cache.txRepo   = new TransactionRepository()); },
   categoryRepo() { return this._cache.cats     || (this._cache.cats     = new CategoryRepository()); },
   budgetRepo()   { return this._cache.budgets  || (this._cache.budgets  = new BudgetRepository()); },
+  runwayRepo()  { return this._cache.runway || (this._cache.runway = new RunwayRepository()); },
   promptRepo()   { return this._cache.prompts  || (this._cache.prompts  = new PromptRepository()); },
 
   telegram() { return this._cache.tg || (this._cache.tg = new TelegramClient(this.secrets().token, this.logRepo())); },
@@ -34,7 +35,7 @@ const AppContext = {
   dashboard() { return this._cache.dash || (this._cache.dash = new DashboardService(this.categoryRepo(), this.txRepo())); },
   brain()     { return this._cache.brain || (this._cache.brain = new IntentRouter(this.lang(), this.finance())); },
 
-  finance() { return this._cache.fin || (this._cache.fin = new FinanceService(this.txRepo(), this.budgetRepo(), this.lang())); },
+  finance() { return this._cache.fin || (this._cache.fin = new FinanceService(this.txRepo(), this.budgetRepo(), this.lang()), this.runwayRepo()); },
   ai()      { return this._cache.int || (this._cache.int = new IntelligenceService(
                 this.gemini(), this.promptRepo(), this.categoryRepo(), this.telegram(),
                 this.finance(), this.lang())); },
@@ -63,7 +64,8 @@ const AppContext = {
       brain: this.brain(),
       buttons: this.buttons(), commands: this.commands(),
       deduper: this.deduper(), notifier: this.notifier(),
-      chatId: this.secrets().chatId
+      chatId: this.secrets().chatId,
+      runway: this.runwayRepo(),
     }));
   },
   polling() {

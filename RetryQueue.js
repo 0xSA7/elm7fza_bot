@@ -79,7 +79,7 @@ class RetryQueue extends SheetRepository {
         // ✅ نجحت — رسالة "اتسجلت" اتبعتت من مسار الحفظ نفسه
         this.finishRow(rowIdx, 'RETRY_DONE', attempts);
       } catch (err) {
-        if (err instanceof HighDemandError) {
+        if (isTransient(err)) {
           if (now - firstTry > CONFIG.RETRY.MAX_WAIT_MS) {
             this.finishRow(rowIdx, 'RETRY_TIMEOUT', attempts);
             this.telegram.send(this.chatId, I18n.t('retryTimeout', this.lang.get()));

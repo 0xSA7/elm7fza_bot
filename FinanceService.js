@@ -1,7 +1,7 @@
 // ═══════════════ منطق المالية — دخل حقيقي منفصل عن الديون ═══════════════
 class FinanceService {
-  constructor(txRepo, budgetRepo, langService) {
-    this.tx = txRepo; this.budgets = budgetRepo; this.i18n = langService;
+  constructor(txRepo, budgetRepo, langService, runwayRepo) {
+    this.tx = txRepo; this.budgets = budgetRepo; this.i18n = langService; this.runway = runwayRepo;
   }
   t(key, params) { return I18n.t(key, this.i18n.get(), params); }
 
@@ -12,7 +12,10 @@ class FinanceService {
       ? this.t('savedOne') : this.t('savedMany', { n: transactions.length });
     let text = '✅ ' + head + ':\n' + transactions.map(t => t.displayLine(lang)).join('\n');
     const warn = this.budgetWarnings(transactions);
-    return warn ? text + '\n\n' + warn : text;
+    const rw = this.runway.getLine();
+    if (rw) text += '\n\n' + rw;
+    if (warn) text += '\n\n' + warn;
+    return text;
   }
 
   // التحذيرات للمصاريف بس — السلف عمرها ما تنقص من الميزانية
@@ -35,6 +38,33 @@ class FinanceService {
         Math.round(pct) + '% ' + this.t('ofBudget') + ' ' + TextUtils.fmt(limit));
     });
     return warns.join('\n');
+  }
+    // ✈️ العداد: باقي كام من الفلوس اللي لازم تكفيك لحد تاريخ معين
+  runwayStatus() {
+    const rw = this.runway ? this.runway.getActive() : null;
+    if (!rw) return null;
+    let inSince = 0, spentSince = 0;
+    this.tx.getAll().forEach(t => {
+      if (t.date < rw.start || t.date > rw.end) return;
+      if (t.kind === 'income') inSince += t.amount;
+      else if (t.kind === 'expense') spentSince += t.amount;
+    });
+    const remaining = inSince - spentSince;
+    const today = DateUtils.today();
+    const daysLeft = Math.max(0, Math.round((new Date(rw.end) - new Date(today)) / 86400000) + 1);
+    const elapsed = Math.max(1, Math.round((new Date(today) - new Date(rw.start)) / 86400000) + 1);
+    const allowed = remaining / Math.max(daysLeft, 1);
+    const burn = spentSince / elapsed;
+    return { remaining: remaining, daysLeft: daysLeft, allowed: allowed, burn: burn,
+             icon: burn <= allowed ? '🟢' : '🔴', end: rw.end };
+  }
+
+  runwayLine() {
+    const st = this.runwayStatus();
+    if (!st) return '';
+    return this.t('runwayLine', { left: TextUtils.fmt(st.remaining),
+                                   daily: TextUtils.fmt(st.allowed),
+                                   end: st.end, icon: st.icon });
   }
 
   undo() {

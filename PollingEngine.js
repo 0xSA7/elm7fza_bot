@@ -23,7 +23,7 @@ class PollingEngine {
           try {
             this.dispatcher.process(upd);
           } catch (err) {
-            if (err instanceof HighDemandError) {
+            if (isTransient(err)) {
               // ⏳ جيميناي overloaded → طابور، مش فشل نهائي
               this.retryQueue.enqueue(upd);
             } else {

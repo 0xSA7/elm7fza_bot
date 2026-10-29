@@ -36,6 +36,12 @@ class UpdateDispatcher {
     if (String(msg.chat.id) !== String(this.deps.chatId)) return;
     if (this.deps.deduper.seen(update.update_id)) return;
 
+    this.dispatch(msg, update.update_id);
+    // ✅ العلامة بعد نجاح المعالجة — لو المعالجة وقعت، الرسالة بترجع تتسحب تاني
+    this.deps.deduper.mark(update.update_id);
+  }
+
+  dispatch(msg, updateId) {
     this.deps.notifier.maybeNotify();
 
     const button = this.deps.buttons.match(msg.text);
@@ -43,7 +49,6 @@ class UpdateDispatcher {
                 : button ? 'button' : msg.text ? 'text'
                 : msg.voice ? 'voice' : msg.photo ? 'photo' : 'other';
 
-    // 🌍 اللغة من رسايلك الحقيقية بس — الأوامر والزرار محايدة
     if (kind === 'text' || kind === 'voice' || kind === 'photo') {
       this.deps.lang.set(this.deps.lang.detect(msg.text || msg.caption || ''));
     }
@@ -51,7 +56,7 @@ class UpdateDispatcher {
 
     this.deps.log.info('MSG_' + kind.toUpperCase(),
       String(msg.text || msg.caption || kind).slice(0, 80),
-      { updateId: update.update_id, lang: lang });
+      { updateId: updateId, lang: lang });
 
     if (button) return this.deps.commands.run(button, this.deps, msg, '');
 
@@ -88,7 +93,15 @@ class UpdateDispatcher {
   }
 
   persistAndReply(msg, result) {
-    this.deps.telegram.send(msg.chat.id, this.deps.finance.save(result.transactions));
+    let text = this.deps.finance.save(result.transactions);
+    if (result.runwayUntil) {                    // ✈️ عداد جاي مع معاملة دخل
+      const end = DateUtils.normalizeIso(result.runwayUntil);
+      const start = result.transactions.length ? result.transactions[0].date : DateUtils.today();
+      this.deps.runway.set(start, end,
+        result.transactions.filter(t => t.kind === 'income').reduce((s, t) => s + t.amount, 0));
+      text += '\n\n✈️ ' + I18n.t('runwaySet', this.deps.lang.get(), { end: end });
+    }
+    this.deps.telegram.send(msg.chat.id, text);
     this.deps.log.info('TX_SAVED',
       result.transactions.map(t => t.category + '=' + t.amount).join(', '),
       { updateId: msg.message_id, lang: this.deps.lang.get() });
@@ -121,6 +134,12 @@ class UpdateDispatcher {
     // 🤖 نداء AI واحد شامل
     const result = this.deps.ai.processText(msg.text, msg.message_id);
     if (result.isTransaction && result.transactions.length) return this.persistAndReply(msg, result);
+    if (result.runwayUntil) {                    // ✈️ جملة عداد من غير معاملة
+      const end = DateUtils.normalizeIso(result.runwayUntil);
+      this.deps.runway.set(DateUtils.today(), end, 0);
+      this.deps.telegram.send(msg.chat.id, '✈️ ' + I18n.t('runwaySet', this.deps.lang.get(), { end: end }));
+      return;
+    }
     this.deps.telegram.send(msg.chat.id, result.reply || I18n.t('fallbackReply', this.deps.lang.get()));
     this.deps.log.info('AI_ANSWER', '', { updateId: msg.message_id, lang: this.deps.lang.get() });
   }
@@ -166,6 +185,22 @@ function registerCommands(registry) {
     .register('stats',  (d, m) => send(d, m, d.finance.stats()))
     .register('top',    (d, m) => send(d, m, d.finance.topExpenses(), HTML))
     .register('budget', (d, m) => send(d, m, d.finance.budgetReport()))
+    .register('runway', (d, m, a) => {
+      const parts = String(a || '').trim().split(/\s+/).filter(String);
+      const lang = d.lang.get();
+      if (!parts.length) {
+        const line = d.finance.runwayLine();
+        return send(d, m, line || I18n.t('runwayNone', lang), HTML);
+      }
+      if (['off', 'cancel', 'الغاء', 'إلغاء', 'وقف'].indexOf(parts[0].toLowerCase()) !== -1) {
+        d.runway.closeAll();
+        return send(d, m, I18n.t('runwayCancel', lang));
+      }
+      const end = DateUtils.normalizeIso(parts[parts.length - 1]);
+      const start = parts.length > 1 ? DateUtils.normalizeIso(parts[0]) : DateUtils.today();
+      d.runway.set(start, end, 0);
+      send(d, m, '✈️ ' + I18n.t('runwaySet', lang, { end: end }));
+    })
     .register('debts',  (d, m) => send(d, m, d.finance.debtsReport(), HTML))
     .register('last',   (d, m) => send(d, m, d.finance.lastFive()))
     .register('undo',   (d, m) => {
