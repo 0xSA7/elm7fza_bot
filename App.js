@@ -22,6 +22,11 @@ function installPolling() {
     if (t.getHandlerFunction() === 'dailySync') ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('dailySync').timeBased().atHour(4).everyDays(1).create();
+  // 🌙 تريجر الديجست اليومي 23:30 — التقرير قبل النوم
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === 'dailySummary') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('dailySummary').timeBased().atHour(23).nearMinute(30).everyDays(1).create();
 }
 function stopPolling() {
   AppContext.polling().uninstall();
@@ -210,11 +215,17 @@ function migrateToV29() {
 // 📋 شغّلها مرة واحدة — تسجيل كل الأوامر في منيو تليجرام
 // (نفس اللي بتعمله يدوي من BotFather — بس أوتوماتيك)
 function setupMenuCommands() {
+  if (!CONFIG.COMMAND_MENU || !CONFIG.COMMAND_MENU.length) {
+    Logger.log('setupMenuCommands: CONFIG.COMMAND_MENU ناقص — المنيو مش اتسجل');
+    AppContext.telegram().send(AppContext.secrets().chatId,
+      '❌ المنيو مش اتسجل — بلوك COMMAND_MENU ناقص في Config.js');
+    return;
+  }
   const res = AppContext.telegram().api('setMyCommands', { commands: CONFIG.COMMAND_MENU });
   Logger.log('setMyCommands: ' + JSON.stringify(res));
   if (res.ok) {
     AppContext.telegram().send(AppContext.secrets().chatId,
-      '📋 كل الأوامر اتسجلت في منيو التليجرام ✅\nاكتب / أو افتح زرار الـ Menu وشوفها');
+      '📋 اتسجل ' + CONFIG.COMMAND_MENU.length + ' أمر في منيو التليجرام ✅\nاكتب / أو افتح زرار الـ Menu وشوفها');
   }
 }
 
@@ -248,6 +259,11 @@ function doctor() {
   check('Wiring: brain()', function () { AppContext.brain(); });
   check('Wiring: dispatcher()', function () { AppContext.dispatcher(); });
   check('Wiring: polling()', function () { AppContext.polling(); });
+  check('Wiring: finance() بترجع FinanceService', function () {
+    const f = AppContext.finance();
+    if (typeof f.today !== 'function' || typeof f.runwayStatus !== 'function')
+      throw new Error('finance() راجع ' + ((f && f.constructor && f.constructor.name) || 'حاجة غلط'));
+  });
   check('العقل المحلي: تحية', function () {
     const r = AppContext.brain().try('شكرا');
     if (!r || r.type !== 'greeting') throw new Error('رجع ' + JSON.stringify(r));
@@ -266,6 +282,10 @@ function doctor() {
       throw new Error('شغّل migrateToV30 تاني');
   });
   check('الشيت: قراءة المعاملات', function () { AppContext.txRepo().getAll(); });
+  check('الحفظ: مانع التكرار (messageId)', function () {
+    if (typeof AppContext.txRepo().existsByMessageId !== 'function')
+      throw new Error('existsByMessageId ناقصة — شغّل آخر نسخة من الكود');
+  });
   check('تليجرام: إرسال رسالة', function () {
     AppContext.telegram().api('sendMessage', { chat_id: AppContext.secrets().chatId, text: '🔧 Doctor: send test' });
   });
@@ -273,7 +293,15 @@ function doctor() {
     const ok = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'pollUpdates'; });
     if (!ok) throw new Error('شغّل installPolling');
   });
+  check('التريجر: dailySummary', function () {
+    const ok = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'dailySummary'; });
+    if (!ok) {   // 🌙 ناقص؟ هنعمله هنا — عشان الديجست اليومي مايفوتش أبداً
+      ScriptApp.newTrigger('dailySummary').timeBased().atHour(23).nearMinute(30).everyDays(1).create();
+      AppContext.logRepo().info('TRIGGER_CREATED', 'dailySummary 23:30');
+    }
+  });
   check('المنيو: مسجل عند تليجرام', function () {
+    AppContext.notifier().syncMenu();   // 📋 لو ناقص بيتسجل قبل الفحص — إصلاح ذاتي
     const res = AppContext.telegram().api('getMyCommands', {});
     if (!res.result || res.result.length < 20)
       throw new Error('مسجل ' + (res.result || []).length + ' بس');
@@ -288,11 +316,6 @@ function doctor() {
   } catch (e) {
     Logger.log('Doctor فشل في الإرسال: ' + e + '\n\n' + report);
   }
-  check('Wiring: finance() بترجع FinanceService', function () {
-    const f = AppContext.finance();
-    if (typeof f.today !== 'function' || typeof f.runwayStatus !== 'function')
-        throw new Error('finance() راجع ' + ((f && f.constructor && f.constructor.name) || 'حاجة غلط'));
-});
 }
 
 // 🔧 شغّلها مرة واحدة — بتوحد أسماء العيلة في كل المعاملات القديمة

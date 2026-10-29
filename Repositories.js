@@ -28,6 +28,17 @@ class TransactionRepository extends SheetRepository {
     return this._memo;
   }
   add(tx) { this.append(tx.toRow()); this._memo = null; }
+
+  // 🔁 هل الرسالة دي متسجلة قبل كده؟ (عمود Message ID — نفس الرسالة عمرها ما تتسجل مرتين)
+  existsByMessageId(mid) {
+    if (!mid) return false;
+    const rows = this.readAll();
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (Number(rows[i][7]) === Number(mid)) return true;
+    }
+    return false;
+  }
+
   deleteLast() {
     const sh = this.open();
     if (sh.getLastRow() < 2) return null;

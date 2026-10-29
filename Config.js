@@ -1,6 +1,6 @@
 // ═══════════════ الإعدادات — v27 ═══════════════
 const CONFIG = {
-  VERSION: 36,
+  VERSION: 37,
   MODEL: 'gemini-3.8-flash',
   SHEETS: {
     TX: 'Transactions', CATEGORIES: 'Categories', BUDGETS: 'Budgets',
@@ -90,6 +90,41 @@ const CONFIG = {
   POLLING: { LIMIT: 50, LONG_POLL_SEC: 20, MAX_SESSION_MS: 50000 },
   PROMPT_KEY: 'EXTRACT_PROMPT',
   RETRY: { MAX_WAIT_MS: 43200000, INTERVAL_MS: 60000, MAX_PER_CYCLE: 5 },
+
+  // 📋 أوامر منيو تليجرام — لازم تفضل جوه CONFIG عشان setupMenuCommands وdoctor يشوفوها
+  COMMAND_MENU: [
+    { command: 'start',        description: 'ابدأ وشوف كل الأوامر' },
+    { command: 'help',         description: 'الشرح الكامل' },
+    { command: 'today',        description: 'مصاريف النهارده' },
+    { command: 'week',         description: 'آخر ٧ أيام' },
+    { command: 'month',        description: 'الشهر ده' },
+    { command: 'stats',        description: 'إحصائيات ومقارنة ٣ شهور' },
+    { command: 'top',          description: 'أعلى بنود الصرف' },
+    { command: 'budget',       description: 'الميزانية' },
+    { command: 'runway',       description: '✈️ العداد: /runway 2026-10-28 2026-11-30' },
+    { command: 'debts',        description: '💳 دفتر الديون' },
+    { command: 'last',         description: 'آخر ٥ حركات' },
+    { command: 'undo',         description: 'امسح آخر حركة' },
+    { command: 'search',       description: 'بحث: /search كلمة' },
+    { command: 'category',     description: 'حركات تصنيف معين' },
+    { command: 'dashboard',    description: 'لوحة التحليلات 📊' },
+    { command: 'export',       description: 'تصدير كل الداتا CSV' },
+    { command: 'backup',      description: 'مزامنة الداتابيز 💾' },
+    { command: 'status',       description: 'حالة النظام' },
+    { command: 'debug',        description: 'تشخيص تفصيلي' },
+    { command: 'doctor',       description: '🩺 فحص شامل — بيتصلح لوحده' },
+    { command: 'ping',         description: 'البوت عايش؟' },
+    { command: 'lang',         description: 'اللغة: /lang ar أو /lang en' },
+    { command: 'lent',         description: 'سلفت فلوس: /lent اسم 200' },
+    { command: 'borrowed',     description: 'استلفت: /borrowed اسم 500' },
+    { command: 'repaid',       description: 'سددت دين: /repaid اسم 200' },
+    { command: 'collected',    description: 'استردت سلفة: /collected اسم 200' },
+    { command: 'lentold',      description: 'سلفة قديمة: /lentold اسم 200' },
+    { command: 'borrowedold',  description: 'دين قديم: /borrowedold اسم 500' },
+    { command: 'getprompt',    description: 'اعرض البرومبت' },
+    { command: 'setprompt',    description: 'عدّل البرومبت' }
+  ],
+
   BACKUP: {
     FOLDER_NAME: 'WalletBot DB',
     TX_FILE: 'transactions.jsonl',
@@ -106,6 +141,12 @@ const CHANGELOG = {
       '• إصلاح: أخطاء الشبكة بقت محاولة تلقائية بدل رسالة ضايعة.\n' +
       '• إصلاح: الرسالة اللي وقعت في نصها بترجع تتسحب تاني.\n' +
       '• 🔒 التوكن مش بيتكتب في اللوج أبداً.',
+  37: '🔒 <b>Version 37 — نهاية التكرار + منيو مظبوط</b>\n\n' +
+      '• 🔒 قفل عالمي على السحب: الرسالة الواحدة بتتعالج مرة واحدة مهما بطأ الـ AI.\n' +
+      '• 🔁 الحفظ بيتأكد من رقم الرسالة — مستحيل نفس الرسالة تتسجل مرتين في الشيت.\n' +
+      '• 📋 COMMAND_MENU كان متحطط بره الإعدادات فكان بيمسح المنيو — اتنقل جواها و29 أمر اتسجلوا.\n' +
+      '• 🩺 /doctor بقى أمر عادي في التليجرام وبيصلح المنيو والتريجر لو ناقصين.\n' +
+      '• ⏳ نصوص الطابور بقت صادقة: "١٢ ساعة" بدل "١٥ دقيقة".'
 };
 
 const STR = {
@@ -139,8 +180,9 @@ const STR = {
   undone:       { ar: 'مسحت', en: 'Removed' },
   unknownCmd:   { ar: 'ميعرفنيش الأمر ده 🤔 جرّب /help', en: 'Unknown command 🤔 try /help' },
   unsupported:  { ar: 'ابعتلي كتابة أو صوت أو صورة فاتورة 🙏', en: 'Send me text, voice, or a receipt photo 🙏' },
-  aiBusyQueued: { ar: '⏳ سيرفرات الذكاء الاصطناعي عليها ضغط دلوقتي — مش محتاج تعمل أي حاجة، هحاول تلقائياً وأبلغك أول ما تنجح (لحد ١٥ دقيقة).', en: '⏳ AI servers are busy right now — no action needed, I\'ll keep retrying and will confirm once it goes through (up to 15 min).' },
-  retryTimeout: { ar: '⏱️ سبت المحاولة بعد ١٥ دقيقة والسيرفرات لسه مشغولة — ابعت الرسالة تاني في وقت تاني.', en: '⏱️ Gave up after 15 minutes — servers still busy. Please resend later.' },
+  aiBusyQueued: { ar: '⏳ سيرفرات الذكاء الاصطناعي عليها ضغط دلوقتي — مش محتاج تعمل أي حاجة، هحاول تلقائياً وأبلغك أول ما تنجح (لحد ١٢ ساعة).', en: '⏳ AI servers are busy right now — no action needed, I\'ll keep retrying and will confirm once it goes through (up to 12 hours).' },
+  retryTimeout: { ar: '⏱️ سبت المحاولة بعد ١٢ ساعة والسيرفرات لسه مشغولة — ابعت الرسالة تاني في وقت تاني.', en: '⏱️ Gave up after 12 hours — servers still busy. Please resend later.' },
+  dupSkipped:   { ar: 'الرسالة دي كانت اتسجلت خلاص — مش هتتكرر في الشيت 👌', en: 'Already saved before — it will never be saved twice 👌' },
   // 💳 الديون
   kIncome:      { ar: 'دخل حر', en: 'free money' },
   kExpense:     { ar: 'صرف', en: 'expense' },
@@ -236,34 +278,3 @@ const BUTTONS = {
   '↩️ تراجع': 'undo',       '❓ مساعدة': 'help',
   'ℹ️ الحالة': 'status',    '↩️ Undo': 'undo', '❓ Help': 'help'
 };
-
-  // 📋 أوامر منيو تليجرام — عدّل فيها زي ما تحب
-  COMMAND_MENU: [
-    { command: 'start',        description: 'Start the wallet bot' },
-    { command: 'help',         description: 'Show all commands' },
-    { command: 'today',        description: "Today's spending" },
-    { command: 'month',        description: "This month's summary" },
-    { command: 'stats',        description: 'Statistics & 3-month trend' },
-    { command: 'top',          description: 'Top spending categories' },
-    { command: 'budget',       description: 'Budget status' },
-    { command: 'debts',        description: 'Debt book — owed by/to me' },
-    { command: 'last',         description: 'Last 5 transactions' },
-    { command: 'undo',         description: 'Delete last transaction' },
-    { command: 'search',       description: 'Search: /search word' },
-    { command: 'export',       description: 'Export all data as CSV' },
-    { command: 'dashboard',    description: 'Analytics & charts' },
-    { command: 'backup',       description: 'Sync database to Drive' },
-    { command: 'status',       description: 'System status' },
-    { command: 'debug',        description: 'Detailed diagnostics' },
-    { command: 'ping',         description: 'Check the bot is alive' },
-    { command: 'lang',         description: 'Switch language: /lang ar|en' },
-    { command: 'lent',         description: 'I lent money: /lent name 200 [date]' },
-    { command: 'borrowed',     description: 'I borrowed: /borrowed name 500 [date]' },
-    { command: 'repaid',       description: 'I repaid a debt: /repaid name 200' },
-    { command: 'collected',    description: 'Debt repaid to me: /collected name 200' },
-    { command: 'lentold',      description: 'Old off-book loan: /lentold name 200 [date]' },
-    { command: 'borrowedold',  description: 'Old off-book debt: /borrowedold name 500' },
-    { command: 'getprompt',    description: 'Show the stored AI prompt' },
-    { command: 'setprompt',    description: 'Edit the AI prompt' },
-    { command: 'runway',        description: 'Money until a date: /runway 2026-10-28 2026-11-30' },
-  ]

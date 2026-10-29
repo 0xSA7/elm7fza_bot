@@ -93,6 +93,16 @@ class UpdateDispatcher {
   }
 
   persistAndReply(msg, result) {
+    const mid = msg.message_id;
+    result.transactions.forEach(t => { t.messageId = mid; });   // 🔁 نفس معرف الرسالة على كل الصفوف
+
+    // 🔒 نفس الرسالة متتسجلش مرتين أبداً — مهما حصل إعادة محاولة من الطابور
+    if (this.deps.txRepo.existsByMessageId(mid)) {
+      this.deps.log.info('TX_DUP_SKIP', 'message ' + mid + ' — متسجلة قبل كده، اتجاهلت عشان ميتكررش', { updateId: mid });
+      this.deps.telegram.send(msg.chat.id, '✅ ' + I18n.t('dupSkipped', this.deps.lang.get()));
+      return;
+    }
+
     let text = this.deps.finance.save(result.transactions);
     if (result.runwayUntil) {                    // ✈️ عداد جاي مع معاملة دخل
       const end = DateUtils.normalizeIso(result.runwayUntil);
@@ -241,6 +251,7 @@ function registerCommands(registry) {
     })
     .register('status', (d, m) => send(d, m, statusReport(d), HTML))
     .register('debug',  (d, m) => send(d, m, debugReport(d), HTML))
+    .register('doctor', (d, m) => doctor())   // 🩺 الفحص الشامل بقى أمر تليجرام
     .register('export', (d, m) => d.telegram.sendDocument(
         m.chat.id, Utilities.newBlob('\uFEFF' + d.finance.toCsv(), 'text/csv', 'expenses.csv'), '📤 All transactions'))
     .register('getprompt', (d, m, a) => {
@@ -316,6 +327,11 @@ function recordDebt(d, m, args, kind) {
     d.telegram.send(m.chat.id,
       I18n.t('debtCmdUsage', d.lang.get(), { cmd: '/' + DEBT_CMDS[kind] }),
       { parse_mode: 'HTML' });
+    return;
+  }
+  // 🔒 نفس أمر الدين مش هيـتسجل مرتين (إعادة محاولة من الطابور مثلاً)
+  if (d.txRepo.existsByMessageId(m.message_id)) {
+    d.log.info('TX_DUP_SKIP', 'debt cmd message ' + m.message_id + ' — متسجلة قبل كده', { updateId: m.message_id });
     return;
   }
   const tx = new Transaction({

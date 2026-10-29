@@ -95,6 +95,7 @@ const mocks = {
 
   SpreadsheetApp: {
     getActiveSpreadsheet: () => ({
+      getUrl: () => 'https://sheets.example.com/fake',
       getSheetByName: (n) => mockSheetStore[n] ? mockSheet(n) : null,
       insertSheet: (n) => mockSheet(n)
     })
