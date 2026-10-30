@@ -28,8 +28,15 @@ class PollingEngine {
           //    ولو المعالجة وقعت الرسالة بتنزل الطابور (12 ساعة) مش بتضيع
           offset = upd.update_id + 1;
           this.props.setProperty('POLL_OFFSET', String(offset));
+
+          // 🛡️ حجز مسبق قبل أي نداء AI — لو التنفيذ اتقتل عند حد الـ ٦ دقايق
+          //    (جيميني معلّقة بدقايق) الرسالة بتفضل محفوظة في شيت الطابور،
+          //    والدورة الجاية بتحاولها تاني — مفيش رسالة تموت في السكوت تاني
+          const slowAi = this.dispatcher.needsSlowAi(upd);
+          if (slowAi) this.retryQueue.ensureRow(upd);
           try {
             this.dispatcher.process(upd);
+            if (slowAi) this.retryQueue.removeRow(upd.update_id);   // ✅ تمّت — نمسح الحجز
           } catch (err) {
             if (isTransient(err)) {
               // ⏳ جيميناي overloaded / شبكة → طابور، مش فشل نهائي

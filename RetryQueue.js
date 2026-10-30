@@ -10,17 +10,50 @@ class RetryQueue extends SheetRepository {
     this.lang = lang;
   }
 
-  // إضافة رسالة فاشلة — مع إشعار واضح مرة واحدة بس
-  enqueue(update,err) {
+  // 🛡️ حجز مسبق قبل نداء الـ AI: الرسالة بتيجي هنا الأول قبل ما ندّي، ولو
+  //    التنفيذ اتقتل عند حد الـ ٦ دقايق (جيميني معلّقة) الدورة الجاية
+  //    بلاقيها هنا وبتحاولها تاني — يعني مفيش رسالة تموت في السكوت مهما حصل
+  ensureRow(update) {
     try {
-      if (this.findRow(update.update_id) !== -1) return;   // محطوطة قبل كده
+      if (this.findRow(update.update_id) !== -1) return;   // محجوزة قبل كده
       this.append([
         update.update_id,
         JSON.stringify(update.message),
         0,
         new Date(),
-        new Date(Date.now() + CONFIG.RETRY.INTERVAL_MS)
+        new Date()          // معادها حالاً — أول دورة بعد أي موت مفاجئ بتشدّها
       ]);
+      this.log.info('AI_PENDING', 'حجز مسبق — الرسالة في أمان لو التنفيذ وقع', { updateId: update.update_id });
+    } catch (e) {
+      this.log.error('AI_PENDING: ' + e, 'فشل الحجز المسبق', '');
+    }
+  }
+
+  // ✅ المعالجة نجحت خلاص — نمسح الحجز (لو موجود) عشان الطابور ميتكدسش
+  removeRow(updateId) {
+    try {
+      const row = this.findRow(updateId);
+      if (row !== -1) this.open().deleteRow(row);
+    } catch (e) {}
+  }
+
+  // إضافة رسالة فاشلة — مع إشعار واضح مرة واحدة بس
+  enqueue(update, err) {
+    try {
+      const existing = this.findRow(update.update_id);
+      if (existing === -1) {
+        this.append([
+          update.update_id,
+          JSON.stringify(update.message),
+          0,
+          new Date(),
+          new Date(Date.now() + CONFIG.RETRY.INTERVAL_MS)
+        ]);
+      } else {
+        // 🛡️ الحجز المسبق موجود — المحاولة دي فشلت بسرعة (429/شبكة):
+        //    نأجل معادها بمقدار الفترة الأساسية ونبعت الإشعار مرة واحدة
+        this.open().getRange(existing, 5).setValue(new Date(Date.now() + CONFIG.RETRY.INTERVAL_MS));
+      }
       const why = String((err && err.message) || err || 'unknown').slice(0, 120);
       this.log.warn('RETRY_QUEUED', 'اتأجّل: ' + why, { updateId: update.update_id });
       this.telegram.send(this.chatId, I18n.t('aiBusyQueued', this.lang.get()));

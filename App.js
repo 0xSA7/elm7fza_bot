@@ -286,6 +286,12 @@ function doctor() {
     if (typeof AppContext.txRepo().existsByMessageId !== 'function')
       throw new Error('existsByMessageId ناقصة — شغّل آخر نسخة من الكود');
   });
+  check('الحماية: حجز مسبق قبل نداء الـ AI', function () {
+    // 🛡️ اللي بيميّت السقوط الصامت: كل رساية AI بتتحجز في الطابور قبل النداء
+    if (typeof AppContext.dispatcher().needsSlowAi !== 'function' ||
+        typeof AppContext.retryQueue().ensureRow !== 'function')
+      throw new Error('الحجز المسبق ناقص — شغّل آخر نسخة من الكود');
+  });
   check('تليجرام: إرسال رسالة', function () {
     AppContext.telegram().api('sendMessage', { chat_id: AppContext.secrets().chatId, text: '🔧 Doctor: send test' });
   });
