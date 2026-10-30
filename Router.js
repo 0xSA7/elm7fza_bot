@@ -86,6 +86,20 @@ class UpdateDispatcher {
     if (msg.photo) return this.handlePhoto(msg);
   }
 
+  // 🛡️ هل الرسالة دي هتروح للـ AI؟ (صوت/صورة/نص العقل المحلي مش فاهمه)
+  //    محرك السحب بيسأل قبل المعالجة عشان يحجز الرسالة في طابور المحاولات
+  //    قبل النداء — فلو التنفيذ اتقتل عند حد الـ ٦ دقايق ماتضيعش
+  needsSlowAi(update) {
+    const msg = update && update.message;
+    if (!msg) return false;
+    if (String(msg.chat.id) !== String(this.deps.chatId)) return false;
+    if (msg.voice || msg.photo) return true;              // 🎙️📸 دايماً AI
+    if (!msg.text) return false;
+    if (msg.text[0] === '/' || this.deps.buttons.match(msg.text)) return false;
+    const intent = this.deps.brain ? this.deps.brain.try(msg.text) : null;
+    return !intent;                                        // مش محلولة محلياً → AI
+  }
+
   // 💾 مزامنة الدرايف مرة واحدة في آخر الدورة
   flushBackup() {
     try { this.deps.backup.flushIfDirty(); }
