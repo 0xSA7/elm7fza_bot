@@ -39,6 +39,26 @@ class TransactionRepository extends SheetRepository {
     return false;
   }
 
+  // ♻️ كل صفوف الرسالة دي + أرقام صفوفها في الشيت — عشان التعديل بالريبلاي
+  findByMessageId(mid) {
+    if (!mid) return [];
+    const rows = this.readAll();
+    const out = [];
+    for (let i = 0; i < rows.length; i++) {
+      if (Number(rows[i][7]) === Number(mid))
+        out.push({ rowIndex: i + 2, tx: Transaction.fromRow(rows[i]) });
+    }
+    return out;
+  }
+
+  // 🗑️ مسح صفوف بعينها — بالعكس من تحت لفوق عشان الأرقام ماتبطلش تزحّف
+  deleteRows(rows) {
+    const sh = this.open();
+    rows.slice().sort((a, b) => b.rowIndex - a.rowIndex)
+      .forEach(r => sh.deleteRow(r.rowIndex));
+    this._memo = null;
+  }
+
   deleteLast() {
     const sh = this.open();
     if (sh.getLastRow() < 2) return null;
@@ -112,6 +132,29 @@ class RunwayRepository extends SheetRepository {
   set(start, end, amount) {
     this.closeAll();
     this.append(['active', start, end, amount, new Date()]);
+  }
+
+  // 💵 القبض الصح: عمود Amount بيتحسب من شيت المعاملات نفسه — مش رقم جامد.
+  //    بتناديه كل حفظ/تعديل/مسح وأمر /runway والـ doctor — فالشيت صادق دايماً
+  refreshAmount(txRepo) {
+    try {
+      const rows = this.readAll();
+      for (let i = rows.length - 1; i >= 0; i--) {
+        if (String(rows[i][0]) !== 'active') continue;
+        const start = DateUtils.normalizeIso(DateUtils.normalizeCell(rows[i][1]));
+        const end   = DateUtils.normalizeIso(DateUtils.normalizeCell(rows[i][2]));
+        let inSince = 0;
+        txRepo.getAll().forEach(t => {
+          if (t.date < start || t.date > end) return;
+          if (t.kind === 'income') inSince += t.amount;
+        });
+        const sh = this.open();
+        sh.getRange(i + 2, 4).setValue(inSince);   // Amount = القبض الفعلي
+        sh.getRange(i + 2, 5).setValue(new Date()); // Updated At
+        return inSince;
+      }
+      return null;   // مفيش عداد شغال
+    } catch (e) { return null; }
   }
 
   closeAll() {

@@ -57,13 +57,15 @@ class FinanceService {
     const allowed = remaining / Math.max(daysLeft, 1);
     const burn = spentSince / elapsed;
     return { remaining: remaining, daysLeft: daysLeft, allowed: allowed, burn: burn,
-             icon: burn <= allowed ? '🟢' : '🔴', end: rw.end };
+             icon: burn <= allowed ? '🟢' : '🔴', end: rw.end, start: rw.start,
+             inSince: inSince, spentSince: spentSince };   // 💵 القبض والصرف مرجعين للفحص والعرض
   }
 
   runwayLine() {
     const st = this.runwayStatus();
     if (!st) return '';
-    return this.t('runwayLine', { left: TextUtils.fmt(st.remaining),
+    return this.t('runwayLine', { in: TextUtils.fmt(st.inSince),
+                                   left: TextUtils.fmt(st.remaining),
                                    daily: TextUtils.fmt(st.allowed),
                                    end: st.end, icon: st.icon });
   }

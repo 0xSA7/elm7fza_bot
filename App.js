@@ -292,6 +292,17 @@ function doctor() {
         typeof AppContext.retryQueue().ensureRow !== 'function')
       throw new Error('الحجز المسبق ناقص — شغّل آخر نسخة من الكود');
   });
+  check('التعديل: محرك الريبلاي (findByMessageId/deleteRows)', function () {
+    if (typeof AppContext.txRepo().findByMessageId !== 'function' ||
+        typeof AppContext.txRepo().deleteRows !== 'function' ||
+        typeof AppContext.ai().processCorrection !== 'function')
+      throw new Error('محرك التعديل بالريبلاي ناقص — شغّل آخر نسخة من الكود');
+  });
+  check('العداد: Amount بيتحدث من القبض الفعلي', function () {
+    // 💵 إصلاح ذاتي: عمود Amount في شيت الـ Runway بيتكتب من شيت المعاملات
+    const v = AppContext.runwayRepo().refreshAmount(AppContext.txRepo());
+    if (v === undefined) throw new Error('refreshAmount ناقصة — شغّل آخر نسخة من الكود');
+  });
   check('تليجرام: إرسال رسالة', function () {
     AppContext.telegram().api('sendMessage', { chat_id: AppContext.secrets().chatId, text: '🔧 Doctor: send test' });
   });

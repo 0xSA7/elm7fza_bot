@@ -55,6 +55,23 @@ class IntelligenceService {
     return new ExtractionResult(parsed, text, messageId);
   }
 
+  // ♻️ تصحيح بالريبلاي: نص التصحيح + نص الرسالة الأصلية + الصفوف المسجلة منها
+  //    → الموديل بيرجع القائمة الجديدة كاملة (بما فيها اللي ماتغيرش)
+  processCorrection(replyText, originalText, currentRows, messageId) {
+    const rowsStr = currentRows.map(function (t) {
+      return t.kind + ' | ' + t.category + ' | ' + t.amount + ' ' + (t.currency || 'EGP') +
+             ' | ' + t.date + (t.note ? ' | ' + t.note : '');
+    }).join('\n');
+    const prompt = this.buildPrompt(replyText) +
+      '\n\nCORRECTION MODE: the "User message" above is a REPLY the user sent to his own older recorded message, to FIX it.\n' +
+      'Original message he replied to: "' + String(originalText).slice(0, 400) + '"\n' +
+      'Rows currently recorded from it (kind | category | amount currency | date | note):\n' + rowsStr + '\n' +
+      'Rules: "transactions" must be the COMPLETE corrected list of ALL items of that original message — keep every unchanged item exactly as recorded (same kind/category/amount/date/note), apply his fix, keep each original date unless his reply explicitly gives a new date, and set is_transaction=true.\n' +
+      'If his reply is clearly NOT a correction of these rows, return is_transaction=false with a short reply in his language.';
+    const parsed = this.gemini.generate([{ text: prompt }], { context: '[Correction]' });
+    return new ExtractionResult(parsed, replyText, messageId);
+  }
+
   // 🎙️ صوت: تفريغ + استخراج في نداء واحد (كانوا اتنين)
   processVoice(fileId, messageId) {
     const b64 = Utilities.base64Encode(this.telegram.downloadFile(fileId).getBytes());

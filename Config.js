@@ -146,7 +146,13 @@ const CHANGELOG = {
       '• 🔁 الحفظ بيتأكد من رقم الرسالة — مستحيل نفس الرسالة تتسجل مرتين في الشيت.\n' +
       '• 📋 COMMAND_MENU كان متحطط بره الإعدادات فكان بيمسح المنيو — اتنقل جواها و29 أمر اتسجلوا.\n' +
       '• 🩺 /doctor بقى أمر عادي في التليجرام وبيصلح المنيو والتريجر لو ناقصين.\n' +
-      '• ⏳ نصوص الطابور بقت صادقة: "١٢ ساعة" بدل "١٥ دقيقة".'
+      '• ⏳ نصوص الطابور بقت صادقة: "١٢ ساعة" بدل "١٥ دقيقة".',
+  40: '♻️ <b>Version 40 — التعديل بالريبلاي + عداد صادق</b>\n\n' +
+      '• ♻️ عدّل أي حركة: اعمل Reply على رسالتك القديمة واكتب التصحيح — «كشف امي كان ب ٦٠٠ مش ٢٠٠» → القديم يتشال والصح يتسجل مكانه.\n' +
+      '• 🗑️ ريبلاي بـ «امسح» = الحركة تتشال خلاص والفلوس ترجع في كل الحسابات فوراً.\n' +
+      '• 💵 عمود Amount في شيت الـ Runway بقى بيتكتب من القبض الفعلي مع كل حركة — مش رقم جامد.\n' +
+      '• ✈️ سطر العداد بقى بيوريك القبض: «قبضت ١٢,٧٥٠ — باقي ١١,٣٧٥».\n' +
+      '• 📊 /runway من غير أرقام = تقرير كامل: قبض / صرف / باقي / سماح يومي.'
 };
 
 const STR = {
@@ -212,7 +218,11 @@ const STR = {
   runwaySet:    { ar: 'العداد اشتغل — فلوسك محسوبة لحد {end}', en: 'Runway set until {end}' },
   runwayNone:   { ar: 'مفيش عداد شغال. شغّله: <code>/runway 2026-10-28 2026-11-30</code>', en: 'No active runway. Try <code>/runway 2026-10-28 2026-11-30</code>' },
   runwayCancel: { ar: '📴 العداد اتلغى', en: 'Runway cancelled' },
-  runwayLine:   { ar: '✈️ باقي {left} — سماحك {daily} ج/يوم لحد {end} {icon}', en: '✈️ {left} left — {daily}/day until {end} {icon}' },
+  runwayLine:   { ar: '✈️ قبضت {in} — باقي {left} — سماحك {daily} ج/يوم لحد {end} {icon}', en: '✈️ earned {in} — {left} left — {daily}/day until {end} {icon}' },
+  runwayReport: { ar: '✈️ <b>العداد</b> — من {start} لحد {end}\n\n💵 القبض في الفترة: {in}ج\n💸 الصرف: {out}ج\n💰 الباقي: {left}ج\n🎯 سماح يومي: {daily}ج (لسه {n} يوم) {icon}', en: '✈️ <b>Runway</b> — {start} → {end}\n\n💵 Income in period: {in}\n💸 Spent: {out}\n💰 Left: {left}\n🎯 Daily allowance: {daily} ({n} days left) {icon}' },
+  editDone:     { ar: 'اتعدلت بدل القديم — {n} حركة دلوقتي الصح', en: 'Edited in place — {n} now correct' },
+  editDeleted:  { ar: 'اتمسحت كلها والفلوس رجعت في حساباتك', en: 'Deleted — money is back in your totals' },
+  editUnclear:  { ar: 'مش فاهم التعديل — الرسالة القديمة زي ما هي ملمستهاش.\nاكتب التصحيح واضح (زي: «كشف امي كان ب ٦٠٠ مش ٢٠٠»)\nأو ابعت «امسح» لو عايز تمسحها خلاص.', en: 'Could not understand the edit — nothing was touched.\nWrite the fix clearly, or send "delete" to remove it.' },
   dSpent:    { ar: '— صرفت {v}ج',                              en: '— spent {v}' },
   dNoSpend:  { ar: '— من غير مصاريف 👏',                        en: '— no spending 👏' },
   dIncome:   { ar: '💵 دخل: {v}ج',                              en: '💵 Income: {v}' },
@@ -247,6 +257,7 @@ const MESSAGES = {
         '/dashboard — لوحة التحليلات 📊\n/last — آخر ٥ حركات\n/undo — مسح آخر معاملة\n' +
         '/search كلمة — بحث\n/export — CSV\n/backup — مزامنة الداتابيز 💾\n' +
         '/status و /debug — حالة النظام\n/lang ar|en — اللغة\n\n' +
+        '♻️ <b>عدّل أي حركة:</b> اعمل Reply على رسالتك القديمة واكتب التصحيح\n«كشف امي كان ب ٦٠٠ مش ٢٠٠» — أو «امسح» لو عايز تشيلها\n\n' +
         'ابعتلي مصاريفك بأي لغة — وسلفك وسدادك كمان:\n"استلفت ٥٠٠ من صاحبي" — "سددت ١٠٠٠ لبويا" — "سلفت عمي ٢٠٠"'+
         '💳 تسجيل يدوي دقيق (بدون AI):\n/lent صاحبي 200 [2026-08-28] — سلفت لحد\n/borrowed اسم 500 — استلفت\n/repaid اسم 200 — سددت دين\n/collected اسم 200 — استردت سلفة\n'+
         '🔷 سلفة قديمة من فلوس خارج التتبع: /lentold صاحبي 200 2026-08-28\n🔶 دين قديم عليك: /borrowedold اسم 500\n',
@@ -256,6 +267,7 @@ const MESSAGES = {
         '/dashboard — analytics 📊\n/last — last 5\n/undo — remove last\n' +
         '/search word — search\n/export — CSV\n/backup — sync DB 💾\n' +
         '/status & /debug — system\n/lang ar|en — language\n\n' +
+        '♻️ <b>Edit any entry:</b> Reply to your own old message with the fix\n"doctor was 600 not 200" — or "delete" to remove it\n\n' +
         'Send expenses in any language — loans too:\n"borrowed 500 from Ali" — "repaid dad 1000"'+
         '💳 Manual debt entry (no AI):\n/lent John 200 [2026-08-28]\n/borrowed John 500\n/repaid John 200\n/collected John 200\n'
   }
