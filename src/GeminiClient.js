@@ -1,4 +1,5 @@
-// ═══════════════ طبقة التواصل مع جيميناي، مع Model Fallback ═══════════════
+// ═══════════════ عميل Gemini ═══════════════
+// الطبقة: Client · غلاف API مع موديلات احتياطية
 class GeminiClient {
   constructor(apiKey, logRepo) {
     this.apiKey = apiKey;

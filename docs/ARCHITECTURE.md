@@ -38,6 +38,50 @@ flowchart TB
     sheets --> actions["GitHub Actions on push<br/>tests - auth - payload - push - verify - health - report"]
 ```
 
+## The repository layout
+
+The runtime box above is organized on disk as 20 single-responsibility modules
+plus the `appsscript.json` manifest, all under `src/`: **`src/` is exactly what
+lands on Google, nothing more**. CI (`.ci/build-payload.py`) sends each file
+by its bare name (`src/App.js` becomes `App`), so the GAS project stays flat
+while the repo stays organized. Every module carries a two-line header
+declaring its layer and its one responsibility:
+
+| Module | Layer | Responsibility |
+| --- | --- | --- |
+| App.js | Entry | entry points: `pollUpdates`, `doPost`, `setup`, `doctor` |
+| Migrations.js | Entry · one-time | old-data migrations, run manually from the editor |
+| AppContext.js | Composition | composition root: lazy singletons, `secrets()` |
+| Router.js | Routing | message gateway + reply-to-edit/delete engine |
+| Commands.js | Routing | the 30 commands + status/debug + manual debt entry |
+| IntentRouter.js | Intelligence | the local brain: quick parse, zero AI calls |
+| IntelligenceService.js | Intelligence | extraction prompt + CORRECTION MODE for reply edits |
+| GeminiClient.js | Client | Gemini API wrapper with fallback models |
+| TelegramClient.js | Client | Bot API wrapper |
+| FinanceService.js | Domain | reports, runway math, debt book, budget warnings |
+| Models.js | Domain | Transaction, ExtractionResult |
+| DashboardService.js | Reports | builds the Dashboard tab with charts |
+| Repositories.js | Data | sheet access layer for all 8 tabs |
+| BackupService.js | Data | Drive folder backup: jsonl, meta, log archives |
+| PollingEngine.js | Engine | locked poll loop, offset ack, error triage |
+| RetryQueue.js | Reliability | write-ahead reservation + retries up to 12h |
+| Core.js | Kernel | errors, date/text utils, language, dedup, version notice |
+| Config.js | Config | runtime constants: sheets, categories, intents, kinds |
+| Strings.js | Presentation | STR, MESSAGES, KEYBOARD, BUTTONS, I18n: every sentence |
+| Changelog.js | Presentation | per-version welcome messages |
+
+The v42 restructure split three files that had grown two jobs each: the old
+`Config.js` became Config (settings) + Strings (everything the bot says) +
+Changelog (welcome messages); the old `Router.js` became Router (the gateway
+and edit engine) + Commands (the handlers it dispatches to); the old `App.js`
+became App (entry points) + Migrations (one-time data fixes). Zero behavior
+change: the same globals land in the same single GAS scope, just from 20
+focused files instead of 16 mixed ones.
+
+Everything else in the repo never reaches Google: `tests/` (the vm harness
+and its 8 suites), `.ci/` (the five pipeline scripts), `docs/` (this set),
+`deploy.sh` (the local gate), `.github/workflows/deploy.yml` (the pipeline).
+
 ## The three brains
 
 The bot never calls Gemini when it does not have to. A message takes one of
@@ -61,7 +105,7 @@ three paths:
 
 ## The message lifecycle (happy path)
 
-1. Trigger fires `pollUpdates()` every minute (App.js).
+1. Trigger fires `pollUpdates()` every minute (`src/App.js`).
 2. `PollingEngine.poll()` takes the **global script lock** (`tryLock(0)`: if
    another cycle is running, this one walks away silently). One cycle at a
    time, ever.
@@ -200,5 +244,6 @@ Telegram never queues messages away from the poller.
 - New category: `DEFAULT_CATEGORIES` + `CATEGORY_AR_EN` + `QUICK_MAP` entries.
 - New report: a method on `FinanceService` reading through the repositories,
   plus strings in `STR` (ar/en).
-- New language: every user-facing string lives in `Config.STR` as `{ar, en}`
-  pairs, rendered through `I18n.t(key, lang, params)`.
+- New language: every user-facing string lives in `Strings.js` (`STR`,
+  `MESSAGES`, `KEYBOARD`) as `{ar, en}` pairs, rendered through
+  `I18n.t(key, lang, params)`.

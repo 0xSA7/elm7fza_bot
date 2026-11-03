@@ -1,4 +1,5 @@
-// ═══════════════ محرك السحب + الجلسة الساخنة + طابور المحاولات ═══════════════
+// ═══════════════ محرك السحب ═══════════════
+// الطبقة: Engine · حلقة مقفولة + إقرار قبل المعالجة + فرز الأخطاء
 class PollingEngine {
   constructor(props, telegram, dispatcher, log, chatId, retryQueue) {
     this.props = props;

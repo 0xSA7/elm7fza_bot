@@ -1,4 +1,5 @@
-// ═══════════════ طبقة التواصل مع تليجرام، مسؤوليتها الوحيدة: الـ API ═══════════════
+// ═══════════════ عميل Telegram ═══════════════
+// الطبقة: Client · غلاف Bot API
 class TelegramClient {
   constructor(token, logRepo) {
     this.token = token;

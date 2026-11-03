@@ -41,13 +41,13 @@ for file_info in data.get('files', []):
 print(f"Extracted {len(data.get('files', []))} files")
 PYEOF
 
-# ── 3) المقارنة ──
+# ── 3) المقارنة (src/*.js محلياً مقابل أسماء مسطحة على جوجل) ──
 PASS=1
 COUNT=0
-for f in *.js appsscript.json; do
+for f in src/*.js src/appsscript.json; do
   test -f "$f" || continue
   COUNT=$((COUNT+1))
-  if [ "$f" = "appsscript.json" ]; then
+  if [ "$f" = "src/appsscript.json" ]; then
     # المانيفست: مقارنة دلالية، جوجل ممكن يعيد ترتيب الحقول فب نقارن الـ JSON مش البايتس
     if ! python3 -c "
 import json, sys
@@ -58,8 +58,9 @@ with open('$f') as a, open('/tmp/verify/appsscript.json') as b:
       PASS=0
     fi
   else
-    # ملفات الكود: مقارنة بالبايت
-    if ! diff -q "$f" "/tmp/verify/$f" > /dev/null 2>&1; then
+    # ملفات الكود: مقارنة بالبايت (الاسم على جوجل = basename من غير src/)
+    vf="/tmp/verify/$(basename "${f%.js}").js"
+    if ! diff -q "$f" "$vf" > /dev/null 2>&1; then
       echo "::error file=$f::الملف على جوجل مختلف عن الريبو!"
       PASS=0
     fi
@@ -67,8 +68,8 @@ with open('$f') as a, open('/tmp/verify/appsscript.json') as b:
 done
 
 # ملفات عندنا مش عند جوجل؟
-for f in *.js; do
-  test -f "/tmp/verify/$f" || {
+for f in src/*.js; do
+  test -f "/tmp/verify/$(basename "${f%.js}").js" || {
     echo "::error::ملف $f مش موجود على جوجل أصلاً!"
     PASS=0
   }

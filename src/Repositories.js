@@ -1,4 +1,5 @@
-// ═══════════════ طبقة التخزين، التعامل مع الشيت بس ═══════════════
+// ═══════════════ المستودعات ═══════════════
+// الطبقة: Data · طبقة وصول الشيت لكل التابات الثمانية
 const TOKEN_SCRUB = /bot\d+:[A-Za-z0-9_-]{20,}/g;
 class SheetRepository {
   constructor(name, headers) { this.name = name; this.headers = headers; }

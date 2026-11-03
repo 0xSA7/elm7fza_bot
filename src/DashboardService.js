@@ -1,4 +1,5 @@
-// ═══════════════ الداشبورد: جداول حية + Charts + دفتر ديون ═══════════════
+// ═══════════════ الداشبورد ═══════════════
+// الطبقة: Reports · بناء تاب التحليلات والرسومات
 class DashboardService {
   constructor(categoryRepo, txRepo) {
     this.categories = categoryRepo;

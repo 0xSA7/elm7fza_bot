@@ -1,4 +1,5 @@
-// ═══════════════ الذكاء الاصطناعي: نداء واحد شامل، برومبت مضغوط ═══════════════
+// ═══════════════ خدمة الذكاء ═══════════════
+// الطبقة: Intelligence · برومبت الاستخراج + CORRECTION MODE للتعديل بالريبلاي
 class IntelligenceService {
   constructor(gemini, promptRepo, categoryRepo, telegram, finance, langService) {
     this.gemini = gemini;

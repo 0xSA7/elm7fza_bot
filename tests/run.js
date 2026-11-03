@@ -149,12 +149,14 @@ const root = path.join(__dirname, '..');
 const context = vm.createContext(mocks);
 
 // الترتيب مهم، كل ملف بيعتمد على اللي قبله
+// (على GAS نفسها الترتيب مش مهم: كل الملفات بتنزل في global scope واحد
+//  ومفيش أي تنفيذ top-level بيعتمد على ملف تاني، بس نحافظ على نفس الترتيب هنا)
 const loadOrder = [
-  'Config.js', 'Core.js', 'Models.js', 'Repositories.js',
-  'IntentRouter.js', 'FinanceService.js', 'IntelligenceService.js',
-  'TelegramClient.js', 'GeminiClient.js', 'Router.js',
-  'RetryQueue.js', 'PollingEngine.js', 'DashboardService.js',
-  'BackupService.js', 'AppContext.js', 'App.js'
+  'src/Config.js', 'src/Strings.js', 'src/Changelog.js', 'src/Core.js', 'src/Models.js',
+  'src/Repositories.js', 'src/IntentRouter.js', 'src/FinanceService.js', 'src/IntelligenceService.js',
+  'src/TelegramClient.js', 'src/GeminiClient.js', 'src/Router.js', 'src/Commands.js',
+  'src/RetryQueue.js', 'src/PollingEngine.js', 'src/DashboardService.js',
+  'src/BackupService.js', 'src/Migrations.js', 'src/AppContext.js', 'src/App.js'
 ];
 
 for (const file of loadOrder) {
@@ -164,14 +166,14 @@ for (const file of loadOrder) {
   }
 }
 
-// ═══ 2.5) قايمة كل ملفات الكود: عشان اختبار حارس الشرطة الطويلة ═══
+// ═══ 2.5) قايمة كل ملفات الكود في src/: عشان اختبار حارس الشرطة الطويلة ═══
 context.__repoFiles = [];
-fs.readdirSync(root).filter(f => f.endsWith('.js'))
-  .forEach(f => context.__repoFiles.push({ name: f, body: fs.readFileSync(path.join(root, f), 'utf8') }));
+fs.readdirSync(path.join(root, 'src')).filter(f => f.endsWith('.js'))
+  .forEach(f => context.__repoFiles.push({ name: 'src/' + f, body: fs.readFileSync(path.join(root, 'src', f), 'utf8') }));
 fs.readdirSync(__dirname).filter(f => f.startsWith('test-') && f.endsWith('.js'))
   .forEach(f => context.__repoFiles.push({ name: 'tests/' + f, body: fs.readFileSync(path.join(__dirname, f), 'utf8') }));
 ['deploy.sh'].forEach(f => context.__repoFiles.push({ name: f, body: fs.readFileSync(path.join(root, f), 'utf8') }));
-fs.readdirSync(path.join(root, '.ci')).filter(String)
+fs.readdirSync(path.join(root, '.ci'), { withFileTypes: true }).filter(d => d.isFile()).map(d => d.name)
   .forEach(f => context.__repoFiles.push({ name: '.ci/' + f, body: fs.readFileSync(path.join(root, '.ci', f), 'utf8') }));
 const wfDir = path.join(root, '.github', 'workflows');
 if (fs.existsSync(wfDir)) fs.readdirSync(wfDir).filter(f => f.endsWith('.yml'))

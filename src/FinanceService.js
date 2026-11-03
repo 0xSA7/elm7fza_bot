@@ -1,4 +1,5 @@
-// ═══════════════ منطق المالية: دخل حقيقي منفصل عن الديون ═══════════════
+// ═══════════════ خدمات المال ═══════════════
+// الطبقة: Domain · التقارير + حسابات العداد + دفتر الديون + تحذيرات الميزانية
 class FinanceService {
   constructor(txRepo, budgetRepo, langService, runwayRepo) {
     this.tx = txRepo; this.budgets = budgetRepo; this.i18n = langService; this.runway = runwayRepo || null;

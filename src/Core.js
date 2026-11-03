@@ -1,4 +1,5 @@
-// ═══════════════ الأساس: أخطاء + أدوات + لغة ═══════════════
+// ═══════════════ الأساس المشترك ═══════════════
+// الطبقة: Kernel · أخطاء + أدوات تاريخ/نص + لغة + منع التكرار + إشعار النسخ
 class BotError extends Error {
   constructor(message, userMsg) {
     super(message);
@@ -39,16 +40,6 @@ function isTransient(err) {
   if (err instanceof BotError) return false;         // أخطاء منطقية عندنا
   return true;                                       // أخطاء شبكة خام (Address unavailable...)
 }
-// ── الترجمة: مفتاح → نص حسب اللغة ──
-const I18n = {
-  t(key, lang, params) {
-    const entry = STR[key];
-    let s = (entry && (entry[lang] || entry.ar)) || key;
-    if (params) Object.keys(params).forEach(k => { s = s.replace('{' + k + '}', params[k]); });
-    return s;
-  }
-};
-
 // ── خدمة اللغة: كشف فوري + حفظ آخر لغة للمحادثة ──
 class LanguageService {
   constructor(props) { this.props = props; }

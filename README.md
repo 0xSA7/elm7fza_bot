@@ -1,14 +1,14 @@
-# elm7fza (المحفظة)
-### an Egyptian-Arabic Telegram money bot
+# elm7fza (المحفظة) 
+### · an Egyptian-Arabic Telegram money bot
 
 > A personal finance bot you talk to in Egyptian Arabic. It lives in your Telegram
 > chat, thinks with Gemini, keeps its books in Google Sheets, and runs for $0/month
 > on Google Apps Script.
 
-**Bot:** @elm7fza_bot · **Stack:** Google Apps Script + Google Sheets + Gemini + Telegram Bot API + GitHub Actions · **Tests:** 78, all green · **Released versions:** 41
+**Bot:** @elm7fza_bot · **Stack:** Google Apps Script + Google Sheets + Gemini + Telegram Bot API + GitHub Actions · **Tests:** 78, all green · **Released versions:** 42 · **License:** MIT
 
-This folder is the complete documentation: what the system is, how to use it,
-how every piece works, and how to build your own from zero.
+This repo is fully documented: what the system is, how to use it, how every
+piece works, and how to build your own from zero.
 
 ## Why it exists
 
@@ -39,46 +39,58 @@ how every piece works, and how to build your own from zero.
 
 | File | Contents |
 | --- | --- |
-| [SETUP.md](docs/SETUP.md) | Build your own instance from zero: Telegram, Gemini, Sheet, clasp, CI |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Every file, the message lifecycle, idempotency design, data model, runway math |
-| [USAGE.md](docsUSAGE.md) | The full user manual with Egyptian Arabic examples for every command |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | deploy.sh gates, the GitHub Actions pipeline, secrets, rollback |
-| [TESTING.md](docs/TESTING.md) | The vm-based test harness, the 78 tests, how to add your own |
-| [SECURITY.md](docs/SECURITY.md) | Threat model, what is secret and where it lives, going-public checklist |
+| [docs/SETUP.md](docs/SETUP.md) | Build your own instance from zero: Telegram, Gemini, Sheet, clasp, CI |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Every file, the message lifecycle, idempotency design, data model, runway math |
+| [docs/USAGE.md](docs/USAGE.md) | The full user manual with Egyptian Arabic examples for every command |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | deploy.sh gates, the GitHub Actions pipeline, secrets, rollback |
+| [docs/TESTING.md](docs/TESTING.md) | The vm-based test harness, the 78 tests, how to add your own |
+| [docs/SECURITY.md](docs/SECURITY.md) | Threat model, what is secret and where it lives, going-public checklist |
 
 ## Repository map
 
-```mermaid
-flowchart TB
-    root["elm7fza_bot/"]
-    root --> app["App.js<br/>entry points, triggers, migrations"]
-    root --> context["AppContext.js<br/>dependency container, secrets"]
-    root --> config["Config.js<br/>config, schemas, intents, i18n"]
-    root --> core["Core.js<br/>dates, text, dedup, logging"]
-    root --> models["Models.js<br/>Transaction, ExtractionResult"]
-    root --> repositories["Repositories.js<br/>Google Sheets access"]
-    root --> intent["IntentRouter.js<br/>quick parse and AI decision"]
-    root --> finance["FinanceService.js<br/>reports, runway, debts, budgets"]
-    root --> intelligence["IntelligenceService.js<br/>Gemini prompts and extraction"]
-    root --> telegram["TelegramClient.js<br/>Telegram Bot API wrapper"]
-    root --> gemini["GeminiClient.js<br/>Gemini API with fallbacks"]
-    root --> router["Router.js<br/>dispatcher, commands, reply edits"]
-    root --> retry["RetryQueue.js<br/>write-ahead retry sheet"]
-    root --> polling["PollingEngine.js<br/>locked poll loop and offset ack"]
-    root --> dashboard["DashboardService.js<br/>Dashboard charts"]
-    root --> backup["BackupService.js<br/>Drive backups"]
-    root --> manifest["appsscript.json<br/>Africa/Cairo, V8"]
-    root --> deploy["deploy.sh<br/>tests, bump, commit, push"]
-    root --> tests["tests/<br/>Node VM harness and suites"]
-    root --> ci[".ci/<br/>auth, payload, push, verify, notify"]
-    root --> workflow[".github/workflows/<br/>deploy.yml pipeline"]
 ```
+elm7fza_bot/
+├── src/                       the bot: 20 modules + manifest, exactly what lands on Google
+│   ├── App.js                 entry points: pollUpdates, doPost, setup, doctor
+│   ├── Migrations.js          one-time data migrations, run manually from the editor
+│   ├── AppContext.js          composition root: lazy singletons, secrets()
+│   ├── Router.js              message gateway + reply-to-edit/delete engine
+│   ├── Commands.js            the 30 Telegram commands + status/debug + manual debt entry
+│   ├── FinanceService.js      reports, runway math, debt book, budget warnings
+│   ├── IntentRouter.js        the local brain: quick parse, zero AI calls
+│   ├── IntelligenceService.js Gemini prompt building, extraction, corrections
+│   ├── GeminiClient.js        Gemini API wrapper with fallback models
+│   ├── TelegramClient.js      Bot API wrapper
+│   ├── PollingEngine.js       locked poll loop, offset ack, error triage
+│   ├── RetryQueue.js          write-ahead retry sheet (12h, 60s interval)
+│   ├── Repositories.js        sheet access layer for all 8 tabs
+│   ├── BackupService.js       Drive folder backup: jsonl, meta, log archives
+│   ├── DashboardService.js    builds the Dashboard sheet with charts
+│   ├── Core.js                kernel: errors, date/text utils, dedup, notifier
+│   ├── Models.js              Transaction, ExtractionResult
+│   ├── Config.js              runtime constants: sheets, categories, intents, kinds
+│   ├── Strings.js             every sentence the bot says: STR, MESSAGES, KEYBOARD, I18n
+│   ├── Changelog.js           per-version welcome messages
+│   └── appsscript.json        the manifest (Africa/Cairo, V8)
+├── deploy.sh                  TESTS → BUMP → COMMIT → PUSH gate script
+├── docs/                      this documentation set
+├── tests/                     run.js harness + 8 suites (78 tests)
+├── .ci/                       auth.sh, build-payload.py, push.sh, verify.sh, notify.sh
+└── .github/workflows/         deploy.yml: the 7-stage pipeline
+```
+
+The layout note: GAS itself has no folders, so CI sends each file to Google by
+its bare name (`src/App.js` becomes `App`). The folder structure is the repo's
+to keep the engineering sane; the runtime stays flat. `src/` holds exactly
+what ships to Google: the 20 modules plus `appsscript.json`, nothing else.
+Every code file in `src/` carries a two-line header declaring its layer and
+single responsibility.
 
 ## Quick facts
 
 | Fact | Value |
 | --- | --- |
-| Source files | 16 JavaScript files (Apps Script V8) |
+| Source files | 20 JavaScript modules + appsscript.json in src/ (Apps Script V8, flat on GAS) |
 | Storage | Google Sheets, 8 tabs: Transactions, Categories, Budgets, Log, Prompts, Dashboard, RetryQueue, Runway |
 | AI model | gemini-3.8-flash (temperature 0.2, fallbacks: gemini-flash-latest, gemini-3.5-flash) |
 | Polling | 1-minute time trigger, 20s long-poll hot session, capped at 50s per run |
@@ -98,10 +110,11 @@ flowchart TB
 | v39 | Write-ahead queue reservation before AI calls (no more silent message loss) |
 | v40 | Reply-to-edit, delete-by-reply with money-back, live Runway amount column |
 | v41 | Unified debt-book names (شلبي = Shalaby), calm runway line, yearless dates, zero em dashes |
+| v42 | Repository restructure: src/ layout, single-responsibility modules (Config/Strings/Changelog, Router/Commands, App/Migrations). Zero behavior change |
 
 ## Quick start
 
-Want your own? Open [SETUP.md](docs/SETUP.md) and follow it top to bottom: about an
-hour of clicking spread over Telegram, Google AI Studio, one Sheet, and one
-GitHub repo. The license is up to the repo owner; if you build on this, a link
+Want your own? Open [docs/SETUP.md](docs/SETUP.md) and follow it top to bottom:
+about an hour of clicking spread over Telegram, Google AI Studio, one Sheet,
+and one GitHub repo. MIT licensed: copy it, bend it, ship your own. A link
 back is appreciated but not required.

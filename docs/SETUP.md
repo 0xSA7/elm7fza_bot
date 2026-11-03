@@ -61,11 +61,12 @@ clasp clone <SCRIPT_ID>     # or: clasp create --type sheets
 
 Notes:
 
-- `clasp clone` pulls the (empty) project into a folder; copy this repo's 16
-  `.js` files + `appsscript.json` over it.
-- `.clasp.json` in the repo root holds the `scriptId`. It is not a secret, but
-  if you prefer not to publish your project id, keep it out of git and let CI
-  read it from the repo you deploy from.
+- `clasp clone` pulls the (empty) project into a folder; copy this repo's
+  `src/` contents (20 modules + `appsscript.json`) into it.
+- `.clasp.json` in the repo root holds the `scriptId` and points `rootDir` at
+  `src/`, so a manual `clasp push` pushes exactly the bot's code and manifest.
+  It is not a secret, but if you prefer not to publish your project id, keep it
+  out of git and let CI read it from the repo you deploy from.
 
 Push:
 
@@ -73,7 +74,9 @@ Push:
 clasp push
 ```
 
-You should now see the 16 files in the Apps Script editor.
+You should now see the 20 code files in the Apps Script editor (flat and
+alphabetical: GAS itself has no folders, so the payload sends file names
+without the `src/` prefix; the folder structure only exists in the repo).
 
 ## Part C · the secrets (Script Properties)
 

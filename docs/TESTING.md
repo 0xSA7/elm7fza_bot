@@ -10,7 +10,7 @@ iteration, and production is your test bench).
 ## The trick
 
 `tests/run.js` builds a Node `vm` context that impersonates the entire Apps
-Script runtime, then loads the 16 source files **in dependency order** exactly
+Script runtime, then loads the 20 source files **in dependency order** exactly
 as the real runtime would:
 
 ```
@@ -19,16 +19,22 @@ vm.createContext({
   SpreadsheetApp, PropertiesService, CacheService,
   LockService, ScriptApp, DriveApp, UrlFetchApp, ContentService
 })
-```
 
 ```mermaid
 flowchart LR
-    config["Config"] --> core["Core"] --> models["Models"] --> repositories["Repositories"]
+    config["Config"] --> strings["Strings"] --> changelog["Changelog"]
+    changelog --> core["Core"] --> models["Models"] --> repositories["Repositories"]
     repositories --> intent["IntentRouter"] --> finance["FinanceService"]
     finance --> intelligence["IntelligenceService"] --> telegram["TelegramClient"]
-    telegram --> gemini["GeminiClient"] --> router["Router"] --> retry["RetryQueue"]
-    retry --> polling["PollingEngine"] --> dashboard["DashboardService"]
-    dashboard --> backup["BackupService"] --> context["AppContext"] --> app["App"]
+    telegram --> gemini["GeminiClient"] --> router["Router"] --> commands["Commands"]
+    commands --> retry["RetryQueue"] --> polling["PollingEngine"]
+    polling --> dashboard["DashboardService"] --> backup["BackupService"]
+    backup --> migrations["Migrations"] --> context["AppContext"] --> app["App"]
+```
+
+(order barely matters: GAS flattens every file into one global scope and
+nothing executes top-level across files, but the harness keeps one canonical
+order anyway)
 ```
 
 The fakes are honest about behavior, not just shape: sheets store rows and

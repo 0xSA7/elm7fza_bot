@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """build-payload.py: بناء payload الـ API من ملفات المشروع
-المدخل : الملفات في المجلد الحالي
+المدخل : src/*.js + src/appsscript.json (كل حاجة اللي بتوصل جوجل)
 المخرج : /tmp/payload.json + عدد الملفات في stdout
+
+ملاحظة مهمة: الاسم المتبعت لجوجل هو basename من غير مسار (src/App.js ← "App")
+فسطح المشروع على GAS بيفضل مسطح زي ما هو مهما كان ترتيب الفولدرات عندنا.
 """
 import json
 import glob
@@ -11,17 +14,17 @@ import os
 def main():
     files = []
 
-    # كل ملفات .js → SERVER_JS (الاسم من غير الامتداد)
-    for f in sorted(glob.glob('*.js')):
+    # كل ملفات src/*.js → SERVER_JS (الاسم basename من غير الامتداد)
+    for f in sorted(glob.glob('src/*.js')):
         with open(f, encoding='utf-8') as fh:
             files.append({
-                'name': f[:-3],           # App.js → "App"
+                'name': os.path.basename(f)[:-3],   # src/App.js → "App"
                 'type': 'SERVER_JS',
                 'source': fh.read()
             })
 
-    # المانيفست → JSON
-    manifest = 'appsscript.json'
+    # المانيفست → JSON (جواه src/ مع الكود: src/ هو بالظبط اللي بيوصل جوجل)
+    manifest = 'src/appsscript.json'
     if os.path.exists(manifest):
         with open(manifest, encoding='utf-8') as fh:
             files.append({
@@ -31,7 +34,7 @@ def main():
             })
 
     if not files:
-        print('::error::مفيش ملفات .gs أو appsscript.json في المجلد!')
+        print('::error::مفيش ملفات .js في src/ ولا src/appsscript.json!')
         sys.exit(1)
 
     with open('/tmp/payload.json', 'w', encoding='utf-8') as fh:

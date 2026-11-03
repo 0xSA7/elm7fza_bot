@@ -1,4 +1,5 @@
-// ═══════════════ كائنات البيزنس: 6 أنواع حركة ═══════════════
+// ═══════════════ النماذج ═══════════════
+// الطبقة: Domain · Transaction و ExtractionResult
 class Transaction {
   constructor(f) {
     this.date = f.date;

@@ -1,4 +1,5 @@
-// ═══════════════ الداتابيز المضغوطة: gzip + المهم بس + Retention ═══════════════
+// ═══════════════ النسخ الاحتياطي ═══════════════
+// الطبقة: Data · مزامنة الدرايف اليومية المضغوطة
 class BackupService {
   constructor(txRepo, props) { this.tx = txRepo; this.props = props; }
 

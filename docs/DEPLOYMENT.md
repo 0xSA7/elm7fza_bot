@@ -21,7 +21,7 @@ flowchart TB
         checkout["1. Checkout"]
         tests["2. Run tests again"]
         auth["3. .ci/auth.sh<br/>OAuth token and script ID"]
-        payload["4. build-payload.py<br/>16 JS files and manifest"]
+        payload["4. build-payload.py<br/>20 JS files from src and manifest"]
         upload["5. .ci/push.sh<br/>replace Apps Script content"]
         verify["6. .ci/verify.sh<br/>byte-compare every file"]
         health["7. getMe and notify<br/>health check and Telegram report"]
