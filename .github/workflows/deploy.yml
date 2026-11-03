@@ -25,10 +25,10 @@ jobs:
         run: |
           echo "🧪 Running tests before deploy..."
           node tests/run.js
-          echo "✓ All tests passed — safe to deploy"
+          echo "✓ All tests passed, safe to deploy"
 
       # ── المرحلة 1: الاعتماد ──
-      - name: Auth — access token from clasp credentials
+      - name: Auth (access token from clasp credentials)
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: .ci/auth.sh
@@ -63,14 +63,14 @@ jobs:
           echo "COMMIT_MSG=$(git log -1 --pretty=%s | tr '\n' ' ')" >> "$GITHUB_ENV"
           echo "APP_VERSION=$(grep -oE 'VERSION:[[:space:]]*[0-9]+' Config.js | head -1 | grep -oE '[0-9]+')" >> "$GITHUB_ENV"
       # ── المرحلة 7: التقرير ──
-      - name: Notify — success report
+      - name: Notify (success report)
         if: success()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MY_CHAT_ID: ${{ secrets.MY_CHAT_ID }}
         run: .ci/notify.sh success
 
-      - name: Notify — failure alert
+      - name: Notify (failure alert)
         if: failure()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}

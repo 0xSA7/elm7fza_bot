@@ -1,4 +1,4 @@
-// ═══════════════ طبقة التواصل مع جيميناي — مع Model Fallback ═══════════════
+// ═══════════════ طبقة التواصل مع جيميناي، مع Model Fallback ═══════════════
 class GeminiClient {
   constructor(apiKey, logRepo) {
     this.apiKey = apiKey;
@@ -6,7 +6,7 @@ class GeminiClient {
     this.models = [CONFIG.MODEL].concat(CONFIG.GEMINI.FALLBACK_MODELS || []);
   }
 
-  // يجرب كل موديل بالترتيب — لو واحد وقع (503/429) ينتقل للتاني فوراً
+  // يجرب كل موديل بالترتيب، لو واحد وقع (503/429) ينتقل للتاني فوراً
   generate(parts, opts) {
     opts = opts || {};
     let lastError = null;
@@ -21,7 +21,7 @@ class GeminiClient {
             this.log.warn('MODEL_FALLBACK', model + ' مشغول (' + e.message + ') → تجربة ' + this.models[m + 1], '');          
           }
           lastError = e;
-          continue;    // الموديل الجاي فوراً — من غير انتظار
+          continue;    // الموديل الجاي فوراً، من غير انتظار
         }
         throw e;       // خطأ حقيقي (مش ضغط) = وقف على طول
       }

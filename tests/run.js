@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * run.js — مُشغّل الاختبارات المحلي
+ * run.js: مُشغّل الاختبارات المحلي
  * بيحاكي بيئة Apps Script بـ vm module ويشغّل الاختبارات
  * الاستخدام: node tests/run.js
  * الخروج بـ 1 لو فيه فشل → الـ CI يوقف الـ deploy
@@ -148,7 +148,7 @@ const mocks = {
 const root = path.join(__dirname, '..');
 const context = vm.createContext(mocks);
 
-// الترتيب مهم — كل ملف بيعتمد على اللي قبله
+// الترتيب مهم، كل ملف بيعتمد على اللي قبله
 const loadOrder = [
   'Config.js', 'Core.js', 'Models.js', 'Repositories.js',
   'IntentRouter.js', 'FinanceService.js', 'IntelligenceService.js',
@@ -163,6 +163,19 @@ for (const file of loadOrder) {
     vm.runInContext(fs.readFileSync(fp, 'utf8'), context, { filename: file });
   }
 }
+
+// ═══ 2.5) قايمة كل ملفات الكود: عشان اختبار حارس الشرطة الطويلة ═══
+context.__repoFiles = [];
+fs.readdirSync(root).filter(f => f.endsWith('.js'))
+  .forEach(f => context.__repoFiles.push({ name: f, body: fs.readFileSync(path.join(root, f), 'utf8') }));
+fs.readdirSync(__dirname).filter(f => f.startsWith('test-') && f.endsWith('.js'))
+  .forEach(f => context.__repoFiles.push({ name: 'tests/' + f, body: fs.readFileSync(path.join(__dirname, f), 'utf8') }));
+['deploy.sh'].forEach(f => context.__repoFiles.push({ name: f, body: fs.readFileSync(path.join(root, f), 'utf8') }));
+fs.readdirSync(path.join(root, '.ci')).filter(String)
+  .forEach(f => context.__repoFiles.push({ name: '.ci/' + f, body: fs.readFileSync(path.join(root, '.ci', f), 'utf8') }));
+const wfDir = path.join(root, '.github', 'workflows');
+if (fs.existsSync(wfDir)) fs.readdirSync(wfDir).filter(f => f.endsWith('.yml'))
+  .forEach(f => context.__repoFiles.push({ name: '.github/workflows/' + f, body: fs.readFileSync(path.join(wfDir, f), 'utf8') }));
 
 // ═══════════════ 3) إطار الاختبار البسيط ═══════════════
 
@@ -243,7 +256,7 @@ for (const tf of testFiles) {
 console.log('\n' + '═'.repeat(50));
 console.log('📊 ' + passed + ' passed | ' + failed + ' failed | ' + (passed + failed) + ' total');
 if (failed > 0) {
-  console.log('❌ TESTS FAILED — الـ deploy متوقف');
+  console.log('❌ TESTS FAILED، الـ deploy متوقف');
   process.exit(1);
 }
 console.log('✅ ALL TESTS PASSED');

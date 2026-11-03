@@ -1,4 +1,4 @@
-// ═══════════════ طبقة التخزين — التعامل مع الشيت بس ═══════════════
+// ═══════════════ طبقة التخزين، التعامل مع الشيت بس ═══════════════
 const TOKEN_SCRUB = /bot\d+:[A-Za-z0-9_-]{20,}/g;
 class SheetRepository {
   constructor(name, headers) { this.name = name; this.headers = headers; }
@@ -29,7 +29,7 @@ class TransactionRepository extends SheetRepository {
   }
   add(tx) { this.append(tx.toRow()); this._memo = null; }
 
-  // 🔁 هل الرسالة دي متسجلة قبل كده؟ (عمود Message ID — نفس الرسالة عمرها ما تتسجل مرتين)
+  // 🔁 هل الرسالة دي متسجلة قبل كده؟ (عمود Message ID، نفس الرسالة عمرها ما تتسجل مرتين)
   existsByMessageId(mid) {
     if (!mid) return false;
     const rows = this.readAll();
@@ -39,7 +39,7 @@ class TransactionRepository extends SheetRepository {
     return false;
   }
 
-  // ♻️ كل صفوف الرسالة دي + أرقام صفوفها في الشيت — عشان التعديل بالريبلاي
+  // ♻️ كل صفوف الرسالة دي + أرقام صفوفها في الشيت، عشان التعديل بالريبلاي
   findByMessageId(mid) {
     if (!mid) return [];
     const rows = this.readAll();
@@ -51,7 +51,7 @@ class TransactionRepository extends SheetRepository {
     return out;
   }
 
-  // 🗑️ مسح صفوف بعينها — بالعكس من تحت لفوق عشان الأرقام ماتبطلش تزحّف
+  // 🗑️ مسح صفوف بعينها، بالعكس من تحت لفوق عشان الأرقام ماتبطلش تزحّف
   deleteRows(rows) {
     const sh = this.open();
     rows.slice().sort((a, b) => b.rowIndex - a.rowIndex)
@@ -134,8 +134,8 @@ class RunwayRepository extends SheetRepository {
     this.append(['active', start, end, amount, new Date()]);
   }
 
-  // 💵 القبض الصح: عمود Amount بيتحسب من شيت المعاملات نفسه — مش رقم جامد.
-  //    بتناديه كل حفظ/تعديل/مسح وأمر /runway والـ doctor — فالشيت صادق دايماً
+  // 💵 القبض الصح: عمود Amount بيتحسب من شيت المعاملات نفسه، مش رقم جامد.
+  //    بتناديه كل حفظ/تعديل/مسح وأمر /runway والـ doctor، فالشيت صادق دايماً
   refreshAmount(txRepo) {
     try {
       const rows = this.readAll();
@@ -176,7 +176,7 @@ class LogRepository extends SheetRepository {
 
   info(event, details, opts) { this.write('INFO',  event, 'OK',   details, opts); }
   warn(event, details, opts) { this.write('WARN',  event, 'WARN', details, opts); }
-  // نفس توقيع النسخة القديمة — عشان الكلاينتس القديمة تشتغل زي ما هي
+  // نفس توقيع النسخة القديمة، عشان الكلاينتس القديمة تشتغل زي ما هي
   error(eng, userMsg, orig) {
     this.write('ERROR', 'ERROR', 'FAIL', String(eng) + ' | ' + String(userMsg), { raw: orig });
   }
@@ -194,7 +194,7 @@ class LogRepository extends SheetRepository {
     this.trim();
   }
 
-  // ♻️ Rotation: الشيت بيفضل خفيف — والأقدم بيتأرشف في درايف قبل مسحه
+  // ♻️ Rotation: الشيت بيفضل خفيف، والأقدم بيتأرشف في درايف قبل مسحه
   trim() {
     try {
       const sh = this.open(), last = sh.getLastRow();

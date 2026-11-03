@@ -1,4 +1,4 @@
-// ═══════════════ الذكاء الاصطناعي — نداء واحد شامل، برومبت مضغوط ═══════════════
+// ═══════════════ الذكاء الاصطناعي: نداء واحد شامل، برومبت مضغوط ═══════════════
 class IntelligenceService {
   constructor(gemini, promptRepo, categoryRepo, telegram, finance, langService) {
     this.gemini = gemini;
@@ -43,18 +43,18 @@ class IntelligenceService {
 
   // لو الرسالة فيها أرقام → غالباً معاملة → بنوفر توكنز السياق
   // الصوت مستحنب مسبقاً → السياق موجود دايماً
-  // 🧑‍🤝‍🧑 قايمة الناس لازم تمشي في الحالتين — من غيرها الـ AI
+  // 🧑‍🤝‍🧑 قايمة الناس لازم تمشي في الحالتين، من غيرها الـ AI
   //    يهجّي «شلبي» بالإنجليزي وأنت مسجلها بالعربي فيتحسب شخص جديد
   contextLine(text, isVoice) {
     const people = this.knownPeopleLine();
     if (!isVoice && text && /[0-9٠-٩]/.test(text))
-      return 'Context: (transaction expected — no data context needed)' + people;
+      return 'Context: (transaction expected; no data context needed)' + people;
     return 'Context: ' + this.finance.compactContextForAi() + people;
   }
 
-  // 🧑‍🤝‍🧑 أسماء الناس المسجلة في الدفتر — سطر صغير (~٣٠ توكن) بيمشي مع كل نداء:
+  // 🧑‍🤝‍🧑 أسماء الناس المسجلة في الدفتر: سطر صغير (~٣٠ توكن) بيمشي مع كل نداء:
   //    قصة الباص: «وريدت 900ج لشلبي» فيها أرقام فالسياق كله كان بيتشال،
-  //    والـ AI مش كان شايف إن «شلبي» مسجل — فكتب «Shalaby» وطلع شخص جديد
+  //    والـ AI مش كان شايف إن «شلبي» مسجل، فكتب «Shalaby» وطلع شخص جديد
   knownPeopleLine() {
     try {
       const book = this.finance.debtBook();
@@ -67,7 +67,7 @@ class IntelligenceService {
     } catch (e) { return ''; }
   }
 
-  // 📝 نص: نداء واحد — معاملة أو إجابة سؤال
+  // 📝 نص: نداء واحد، معاملة أو إجابة سؤال
   processText(text, messageId) {
     const parsed = this.gemini.generate([{ text: this.buildPrompt(text) }], { context: text });
     return new ExtractionResult(parsed, text, messageId);
@@ -84,7 +84,7 @@ class IntelligenceService {
       '\n\nCORRECTION MODE: the "User message" above is a REPLY the user sent to his own older recorded message, to FIX it.\n' +
       'Original message he replied to: "' + String(originalText).slice(0, 400) + '"\n' +
       'Rows currently recorded from it (kind | category | amount currency | date | note):\n' + rowsStr + '\n' +
-      'Rules: "transactions" must be the COMPLETE corrected list of ALL items of that original message — keep every unchanged item exactly as recorded (same kind/category/amount/date/note), apply his fix, keep each original date unless his reply explicitly gives a new date, and set is_transaction=true.\n' +
+      'Rules: "transactions" must be the COMPLETE corrected list of ALL items of that original message; keep every unchanged item exactly as recorded (same kind/category/amount/date/note), apply his fix, keep each original date unless his reply explicitly gives a new date, and set is_transaction=true.\n' +
       'If his reply is clearly NOT a correction of these rows, return is_transaction=false with a short reply in his language.';
     const parsed = this.gemini.generate([{ text: prompt }], { context: '[Correction]' });
     return new ExtractionResult(parsed, replyText, messageId);
@@ -105,7 +105,7 @@ class IntelligenceService {
     };
   }
 
-  // 📸 صورة: زي ما هي — نداء واحد
+  // 📸 صورة: زي ما هي، نداء واحد
   extractReceipt(fileId, caption, messageId) {
     const b64 = Utilities.base64Encode(this.telegram.downloadFile(fileId).getBytes());
     const parsed = this.gemini.generate([

@@ -1,4 +1,4 @@
-// ═══════════════ كائنات البيزنس — 6 أنواع حركة ═══════════════
+// ═══════════════ كائنات البيزنس: 6 أنواع حركة ═══════════════
 class Transaction {
   constructor(f) {
     this.date = f.date;
@@ -42,7 +42,7 @@ class Transaction {
   displayLine(lang) {
     const k = CONFIG.KINDS[this.kind];
     let line = k.icon + ' ' + (k.sign ? k.sign + ' ' : '') +
-               TextUtils.fmt(this.amount) + ' ' + this.currency + ' — ' + this.category;
+               TextUtils.fmt(this.amount) + ' ' + this.currency + ' · ' + this.category;
     if (this.note) line += ' (' + this.note + ')';
     if (this.kind !== 'income' && this.kind !== 'expense')
       line += ' · ' + I18n.t(k.strKey, lang);

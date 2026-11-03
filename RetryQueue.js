@@ -1,6 +1,6 @@
 // ═══════════════ طابور المحاولات التلقائية ═══════════════
 // لو جيميناي عليها ضغط (429/503): الرسالة بتتحفظ هنا بدل ما تفشل نهائياً،
-// وبتتحاول تاني بتباعد تدريجي لحد ١٢ ساعة — والإشعار بيوصلك لوحده.
+// وبتتحاول تاني بتباعد تدريجي لحد ١٢ ساعة، والإشعار بيوصلك لوحده.
 class RetryQueue extends SheetRepository {
   constructor(telegram, chatId, log, lang) {
     super(CONFIG.SHEETS.RETRY, CONFIG.RETRY_HEADERS);
@@ -12,7 +12,7 @@ class RetryQueue extends SheetRepository {
 
   // 🛡️ حجز مسبق قبل نداء الـ AI: الرسالة بتيجي هنا الأول قبل ما ندّي، ولو
   //    التنفيذ اتقتل عند حد الـ ٦ دقايق (جيميني معلّقة) الدورة الجاية
-  //    بلاقيها هنا وبتحاولها تاني — يعني مفيش رسالة تموت في السكوت مهما حصل
+  //    بلاقيها هنا وبتحاولها تاني، يعني مفيش رسالة تموت في السكوت مهما حصل
   ensureRow(update) {
     try {
       if (this.findRow(update.update_id) !== -1) return;   // محجوزة قبل كده
@@ -21,15 +21,15 @@ class RetryQueue extends SheetRepository {
         JSON.stringify(update.message),
         0,
         new Date(),
-        new Date()          // معادها حالاً — أول دورة بعد أي موت مفاجئ بتشدّها
+        new Date()          // معادها حالاً، أول دورة بعد أي موت مفاجئ بتشدّها
       ]);
-      this.log.info('AI_PENDING', 'حجز مسبق — الرسالة في أمان لو التنفيذ وقع', { updateId: update.update_id });
+      this.log.info('AI_PENDING', 'حجز مسبق، الرسالة في أمان لو التنفيذ وقع', { updateId: update.update_id });
     } catch (e) {
       this.log.error('AI_PENDING: ' + e, 'فشل الحجز المسبق', '');
     }
   }
 
-  // ✅ المعالجة نجحت خلاص — نمسح الحجز (لو موجود) عشان الطابور ميتكدسش
+  // ✅ المعالجة نجحت خلاص، نمسح الحجز (لو موجود) عشان الطابور ميتكدسش
   removeRow(updateId) {
     try {
       const row = this.findRow(updateId);
@@ -37,7 +37,7 @@ class RetryQueue extends SheetRepository {
     } catch (e) {}
   }
 
-  // إضافة رسالة فاشلة — مع إشعار واضح مرة واحدة بس
+  // إضافة رسالة فاشلة، مع إشعار واضح مرة واحدة بس
   enqueue(update, err) {
     try {
       const existing = this.findRow(update.update_id);
@@ -50,7 +50,7 @@ class RetryQueue extends SheetRepository {
           new Date(Date.now() + CONFIG.RETRY.INTERVAL_MS)
         ]);
       } else {
-        // 🛡️ الحجز المسبق موجود — المحاولة دي فشلت بسرعة (429/شبكة):
+        // 🛡️ الحجز المسبق موجود، المحاولة دي فشلت بسرعة (429/شبكة):
         //    نأجل معادها بمقدار الفترة الأساسية ونبعت الإشعار مرة واحدة
         this.open().getRange(existing, 5).setValue(new Date(Date.now() + CONFIG.RETRY.INTERVAL_MS));
       }
@@ -70,10 +70,10 @@ class RetryQueue extends SheetRepository {
     return -1;
   }
 
-  // معالجة المستحق — بقفل عشان تنفيذين متوازيين ميعملوش نفس الرسالة مرتين
+  // معالجة المستحق، بقفل عشان تنفيذين متوازيين ميعملوش نفس الرسالة مرتين
   processDue(dispatcher) {
     const lock = LockService.getScriptLock();
-    if (!lock.tryLock(2000)) return;   // تنفيذ تاني شغّال فيها — تمام كده
+    if (!lock.tryLock(2000)) return;   // تنفيذ تاني شغّال فيها، تمام كده
     try {
       this.processDueLocked(dispatcher);
     } finally {
@@ -89,7 +89,7 @@ class RetryQueue extends SheetRepository {
     const now = Date.now();
     let handled = 0;
 
-    // بالعكس من تحت لفوق — عشان المسح ميبوظش المؤشرات
+    // بالعكس من تحت لفوق، عشان المسح ميبوظش المؤشرات
     for (let i = data.length - 1; i >= 0 && handled < CONFIG.RETRY.MAX_PER_CYCLE; i--) {
       const rowIdx = i + 2;
       const updateId = Number(data[i][0]);
@@ -109,7 +109,7 @@ class RetryQueue extends SheetRepository {
 
       try {
         dispatcher.processRetry(JSON.parse(String(data[i][1])));
-        // ✅ نجحت — رسالة "اتسجلت" اتبعتت من مسار الحفظ نفسه
+        // ✅ نجحت، رسالة "اتسجلت" اتبعتت من مسار الحفظ نفسه
         this.finishRow(rowIdx, 'RETRY_DONE', attempts);
       } catch (err) {
         if (isTransient(err)) {
@@ -123,7 +123,7 @@ class RetryQueue extends SheetRepository {
             sh.getRange(rowIdx, 5).setValue(new Date(now + backoffMs));
           }
         } else {
-          // خطأ حقيقي مختلف — مفيش إعادة محاولة
+          // خطأ حقيقي مختلف، مفيش إعادة محاولة
           this.finishRow(rowIdx, 'RETRY_FAILED', attempts);
           const userMsg = (err && err.userMsg) || 'حدث خطأ في المعالجة.';
           this.log.error((err && (err.stack || err.message)) || String(err),

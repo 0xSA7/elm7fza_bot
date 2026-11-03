@@ -12,7 +12,7 @@ class BackupService {
   }
 
   // كتابة مضغوطة: بترمي القديم وتكتب .gz جديد
-  // (الشيت هو المصدر الحقيقي للداتا — فالاستبدال آمن 100%)
+  // (الشيت هو المصدر الحقيقي للداتا، فالاستبدال آمن 100%)
   writeCompressed(baseName, content) {
     const folder = this.folder();
     const gzName = baseName + '.gz';
@@ -30,7 +30,7 @@ class BackupService {
     file.setContent(content);
   }
 
-  // ── المعاملات: الداتا الكاملة — مضغوطة وبتتحدث مع كل عملية ──
+  // ── المعاملات: الداتا الكاملة، مضغوطة وبتتحدث مع كل عملية ──
   syncTransactions() {
     const rows = this.tx.getAll();
     const lines = rows.map(t => JSON.stringify(this.toRecord(t)));
@@ -52,7 +52,7 @@ class BackupService {
     };
   }
 
-  // ── أرشيف اللوق: المهم بس (ERROR/WARN) — ملف شهري واحد مضغوط ──
+  // ── أرشيف اللوق: المهم بس (ERROR/WARN)، ملف شهري واحد مضغوط ──
   // لو الدفعة كلها INFO → مفيش كتابة أصلاً
   archiveLog(rows) {
     try {

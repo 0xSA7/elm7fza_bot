@@ -15,7 +15,7 @@ test('الشيت القديم: صفوف شلبي العربية بتتوحد و�
   repo.append(['2026-10-28', 2600, 'EGP', 'loan_in_off', 'شلبي', 'دين قديم', 'raw', 9401, new Date()]);
   repo.append(['2026-10-28', 900, 'EGP', 'loan_in', 'شلبي', 'ترجمة بيان الدرجات', 'raw', 9402, new Date()]);
   repo.append(['2026-11-03', 900, 'EGP', 'repay_out', 'Shalaby', 'سداد لشلبي', 'raw', 9403, new Date()]);
-  repo._memo = null;   // الصفوف الخام اتكتبت على طول — لازم نفضّ الميمو
+  repo._memo = null;   // الصفوف الخام اتكتبت على طول، لازم نفضّ الميمو
 
   const rows = repo.getAll().filter(function (t) {
     return Number(t.messageId) >= 9401 && Number(t.messageId) <= 9403;
@@ -26,7 +26,7 @@ test('الشيت القديم: صفوف شلبي العربية بتتوحد و�
 
 test('الدفتر: سداد 900 بيرجّع الرصيد الصح (2,600) ومفيش شخص منفصل', function () {
   const repo = AppContext.txRepo();
-  // الشيت مشترك بين التيستات — ننضّف صفوف التيست اللي فات الأول
+  // الشيت مشترك بين التيستات، ننضّف صفوف التيست اللي فات الأول
   [9401, 9402, 9403].forEach(function (mid) {
     const found = repo.findByMessageId(mid);
     if (found.length) repo.deleteRows(found);
@@ -55,7 +55,7 @@ test('حفظ جديد: AI رجّع «شلبي» عربي → الصف بيتكت
 });
 
 test('البرومبت: قايمة الناس بتمشي حتى لو الرسالة فيها أرقام', function () {
-  // دي حالة السداد بالظبط — الرسالة فيها 900 فالسياق كله كان بيتشال قبل كده
+  // دي حالة السداد بالظبط، الرسالة فيها 900 فالسياق كله كان بيتشال قبل كده
   const line = AppContext.ai().contextLine('وريدت 900ج لشلبي', false);
   expect(String(line).indexOf('People already in the debt book')).not.toBe(-1);
   expect(String(line).indexOf('Shalaby')).not.toBe(-1);
@@ -74,7 +74,7 @@ test('knownPeopleLine: بترجع string دايماً ومن غير ما تتك�
 test('مسح السداد بالريبلاي بعد التوحيد: رصيد شلبي بيرجع 3,500', function () {
   const repo = AppContext.txRepo();
   const d = AppContext.dispatcher();
-  // الرسالة الأصلية بتاعة السداد — مجموعة واحدة تحت msg 9431
+  // الرسالة الأصلية بتاعة السداد، مجموعة واحدة تحت msg 9431
   d.persistAndReply({ chat: { id: 'test' }, message_id: 9431, text: 'وريدت 900ج لشلبي' },
     { transactions: [new Transaction({ date: '2026-11-03', amount: 900, kind: 'repay_out',
                                        category: 'شلبي', note: 'سداد لشلبي', messageId: 9431 })] });

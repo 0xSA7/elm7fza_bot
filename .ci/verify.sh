@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ═══ verify.sh — pull من جوجل ومقارنة ═══
+# ═══ verify.sh: pull من جوجل ومقارنة ═══
 set -euo pipefail
 
 require() {
@@ -20,7 +20,7 @@ if jq -e '.error' /tmp/verify_response.json > /dev/null 2>&1; then
   exit 1
 fi
 
-# ── 2) نفك الملفات (✅ .js مش .gs — ده كان الباج) ──
+# ── 2) نفك الملفات (✅ .js مش .gs، ده كان الباج) ──
 mkdir -p /tmp/verify
 python3 << 'PYEOF'
 import json
@@ -48,7 +48,7 @@ for f in *.js appsscript.json; do
   test -f "$f" || continue
   COUNT=$((COUNT+1))
   if [ "$f" = "appsscript.json" ]; then
-    # المانيفست: مقارنة دلالية — جوجل ممكن يعيد ترتيب الحقول فب نقارن الـ JSON مش البايتس
+    # المانيفست: مقارنة دلالية، جوجل ممكن يعيد ترتيب الحقول فب نقارن الـ JSON مش البايتس
     if ! python3 -c "
 import json, sys
 with open('$f') as a, open('/tmp/verify/appsscript.json') as b:

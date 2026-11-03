@@ -1,4 +1,4 @@
-// ═══ v39: اختبارات الحجز المسبق — مفيش رساية AI تموت في السكوت ═══
+// ═══ v39: اختبارات الحجز المسبق، مفيش رساية AI تموت في السكوت ═══
 
 test('needsSlowAi: الأوامر والإدخال السريع والتحيات محليين (مفيش حجز)', function () {
   const d = AppContext.dispatcher();
@@ -25,14 +25,14 @@ test('ensureRow: الرساية بتتحجز مرة واحدة بس (مفيش ص
   const upd = { update_id: 910001, message: { chat: { id: 1 }, message_id: 71, text: 'سردية بتروح للـ AI' } };
   q.ensureRow(upd);
   expect(q.findRow(910001)).not.toBe(-1);
-  q.ensureRow(upd);   // تاني — لازم تفضل صف واحد
+  q.ensureRow(upd);   // تاني، لازم تفضل صف واحد
   const rows = q.readAll().filter(function (r) { return Number(r[0]) === 910001; });
   expect(rows.length).toBe(1);
   q.removeRow(910001);   // 🧹 تنظيف
   expect(q.findRow(910001)).toBe(-1);
 });
 
-test('الضمانة الكبرى: التنفيذ "اتقتل" — الرساية بتتعالج من الطابور وبتتمسح', function () {
+test('الضمانة الكبرى: التنفيذ "اتقتل"، الرساية بتتعالج من الطابور وبتتمسح', function () {
   const q = AppContext.retryQueue();
   const d = AppContext.dispatcher();
   const upd = { update_id: 910002, message: { chat: { id: d.deps.chatId }, message_id: 72,
@@ -49,7 +49,7 @@ test('enqueue: على رساية محجوزة بتأجل المعاد وتبعت
   q.ensureRow(upd);
   q.enqueue(upd, new HighDemandError('HTTP 429'));   // فشلت بسرعة → تأجيل + إشعار
   const rows = q.readAll().filter(function (r) { return Number(r[0]) === 910003; });
-  expect(rows.length).toBe(1);   // صف واحد — مش اتنين
+  expect(rows.length).toBe(1);   // صف واحد، مش اتنين
   q.removeRow(910003);
   expect(q.findRow(910003)).toBe(-1);
 });

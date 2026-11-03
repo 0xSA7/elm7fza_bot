@@ -22,7 +22,7 @@ function installPolling() {
     if (t.getHandlerFunction() === 'dailySync') ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('dailySync').timeBased().atHour(4).everyDays(1).create();
-  // 🌙 تريجر الديجست اليومي 23:30 — التقرير قبل النوم
+  // 🌙 تريجر الديجست اليومي 23:30، التقرير قبل النوم
   ScriptApp.getProjectTriggers().forEach(t => {
     if (t.getHandlerFunction() === 'dailySummary') ScriptApp.deleteTrigger(t);
   });
@@ -36,11 +36,11 @@ function stopPolling() {
   Logger.log('Stopped ✅');
 }
 
-// 🔄 شغّلها مرة واحدة بعد التحديث — بتحوّل الداتا القديمة للإنجليزي
+// 🔄 شغّلها مرة واحدة بعد التحديث، بتحوّل الداتا القديمة للإنجليزي
 function migrateToEnglish() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // 1) الترانزاكشنز — الهيدرز + كل التصنيفات العربية (حتى اللي اتسجلت بعد ميجريشن سابق)
+  // 1) الترانزاكشنز، الهيدرز + كل التصنيفات العربية (حتى اللي اتسجلت بعد ميجريشن سابق)
   const tx = ss.getSheetByName('Transactions');
   if (tx) {
     if (String(tx.getRange(1, 1).getValue()).trim() === 'التاريخ') {
@@ -82,7 +82,7 @@ function migrateToEnglish() {
   }
 
   // 4) مسح الـ Prompt العربي القديم عشان يتولد إنجليزي
-  //    (لو معدلتش الـ Prompt بإيدك — عادي شغلها)
+  //    (لو معدلتش الـ Prompt بإيدك، عادي شغلها)
   const pr = ss.getSheetByName('Prompts');
   if (pr && pr.getLastRow() >= 2) {
     const data = pr.getRange(2, 1, pr.getLastRow() - 1, 2).getValues();
@@ -145,7 +145,7 @@ function monthlyReport() {
       d => d.startsWith(DateUtils.month(-1))));
 }
 
-// 💳 شغّلها مرة واحدة بعد التحديث — بتحوّل الداتا القديمة للنظام المحاسبي الجديد
+// 💳 شغّلها مرة واحدة بعد التحديث، بتحوّل الداتا القديمة للنظام المحاسبي الجديد
 function migrateToV27() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const tx = ss.getSheetByName('Transactions');
@@ -187,7 +187,7 @@ function migrateToV27() {
     '💳 <b>الميجريشن خلصت!</b>\n' + fixed + ' حركة اتعادلت (سلف والديك + الهدية + الرصيد).\n' +
     'ابعت /debts وشوف دفترك الجديد 👀', { parse_mode: 'HTML' });
 }
-// ⚡ شغّلها مرة واحدة — بيمسح البرومبت الكبير القديم عشان يتولد المضغوط الجديد
+// ⚡ شغّلها مرة واحدة، بيمسح البرومبت الكبير القديم عشان يتولد المضغوط الجديد
 function migrateToV28() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const pr = ss.getSheetByName('Prompts');
@@ -197,10 +197,10 @@ function migrateToV28() {
       if (String(data[i][0]).trim() === CONFIG.PROMPT_KEY) { pr.deleteRow(i + 2); break; }
     }
   }
-  Logger.log('V28 done — البرومبت المضغوط هيتولد مع أول رسالة ✅');
+  Logger.log('V28 done: البرومبت المضغوط هيتولد مع أول رسالة ✅');
 }
 
-// 🧠 شغّلها مرة بعد التحديث — بتمسح البرومبت المحفوظ عشان يتولد بالقواعد المقواة الجديدة
+// 🧠 شغّلها مرة بعد التحديث، بتمسح البرومبت المحفوظ عشان يتولد بالقواعد المقواة الجديدة
 function migrateToV29() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const pr = ss.getSheetByName('Prompts');
@@ -210,15 +210,15 @@ function migrateToV29() {
       if (String(data[i][0]).trim() === CONFIG.PROMPT_KEY) { pr.deleteRow(i + 2); break; }
     }
   }
-  Logger.log('V29 done — البرومبت المقوى هيتولد مع أول رسالة ✅');
+  Logger.log('V29 done: البرومبت المقوى هيتولد مع أول رسالة ✅');
 }
-// 📋 شغّلها مرة واحدة — تسجيل كل الأوامر في منيو تليجرام
-// (نفس اللي بتعمله يدوي من BotFather — بس أوتوماتيك)
+// 📋 شغّلها مرة واحدة، تسجيل كل الأوامر في منيو تليجرام
+// (نفس اللي بتعمله يدوي من BotFather، بس أوتوماتيك)
 function setupMenuCommands() {
   if (!CONFIG.COMMAND_MENU || !CONFIG.COMMAND_MENU.length) {
-    Logger.log('setupMenuCommands: CONFIG.COMMAND_MENU ناقص — المنيو مش اتسجل');
+    Logger.log('setupMenuCommands: CONFIG.COMMAND_MENU ناقص، المنيو مش اتسجل');
     AppContext.telegram().send(AppContext.secrets().chatId,
-      '❌ المنيو مش اتسجل — بلوك COMMAND_MENU ناقص في Config.js');
+      '❌ المنيو مش اتسجل، بلوك COMMAND_MENU ناقص في Config.js');
     return;
   }
   const res = AppContext.telegram().api('setMyCommands', { commands: CONFIG.COMMAND_MENU });
@@ -229,7 +229,7 @@ function setupMenuCommands() {
   }
 }
 
-// 🧠 شغّلها مرة بعد التحديث — مسح البرومبت المخزن عشان يتولد بالقواعد الجديدة
+// 🧠 شغّلها مرة بعد التحديث، مسح البرومبت المخزن عشان يتولد بالقواعد الجديدة
 function migrateToV30() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const pr = ss.getSheetByName('Prompts');
@@ -241,7 +241,7 @@ function migrateToV30() {
   }
   Logger.log('V30 done ✅');
 }
-// 🩺 الفاحص الشامل — من دلوقتي دي أمر التحقق بعد أي تحديث
+// 🩺 الفاحص الشامل، من دلوقتي دي أمر التحقق بعد أي تحديث
 function doctor() {
   const lines = [];
   let failed = 0;
@@ -284,24 +284,24 @@ function doctor() {
   check('الشيت: قراءة المعاملات', function () { AppContext.txRepo().getAll(); });
   check('الحفظ: مانع التكرار (messageId)', function () {
     if (typeof AppContext.txRepo().existsByMessageId !== 'function')
-      throw new Error('existsByMessageId ناقصة — شغّل آخر نسخة من الكود');
+      throw new Error('existsByMessageId ناقصة، شغّل آخر نسخة من الكود');
   });
   check('الحماية: حجز مسبق قبل نداء الـ AI', function () {
     // 🛡️ اللي بيميّت السقوط الصامت: كل رساية AI بتتحجز في الطابور قبل النداء
     if (typeof AppContext.dispatcher().needsSlowAi !== 'function' ||
         typeof AppContext.retryQueue().ensureRow !== 'function')
-      throw new Error('الحجز المسبق ناقص — شغّل آخر نسخة من الكود');
+      throw new Error('الحجز المسبق ناقص، شغّل آخر نسخة من الكود');
   });
   check('التعديل: محرك الريبلاي (findByMessageId/deleteRows)', function () {
     if (typeof AppContext.txRepo().findByMessageId !== 'function' ||
         typeof AppContext.txRepo().deleteRows !== 'function' ||
         typeof AppContext.ai().processCorrection !== 'function')
-      throw new Error('محرك التعديل بالريبلاي ناقص — شغّل آخر نسخة من الكود');
+      throw new Error('محرك التعديل بالريبلاي ناقص، شغّل آخر نسخة من الكود');
   });
   check('العداد: Amount بيتحدث من القبض الفعلي', function () {
     // 💵 إصلاح ذاتي: عمود Amount في شيت الـ Runway بيتكتب من شيت المعاملات
     const v = AppContext.runwayRepo().refreshAmount(AppContext.txRepo());
-    if (v === undefined) throw new Error('refreshAmount ناقصة — شغّل آخر نسخة من الكود');
+    if (v === undefined) throw new Error('refreshAmount ناقصة، شغّل آخر نسخة من الكود');
   });
   check('تليجرام: إرسال رسالة', function () {
     AppContext.telegram().api('sendMessage', { chat_id: AppContext.secrets().chatId, text: '🔧 Doctor: send test' });
@@ -312,21 +312,21 @@ function doctor() {
   });
   check('التريجر: dailySummary', function () {
     const ok = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'dailySummary'; });
-    if (!ok) {   // 🌙 ناقص؟ هنعمله هنا — عشان الديجست اليومي مايفوتش أبداً
+    if (!ok) {   // 🌙 ناقص؟ هنعمله هنا، عشان الديجست اليومي مايفوتش أبداً
       ScriptApp.newTrigger('dailySummary').timeBased().atHour(23).nearMinute(30).everyDays(1).create();
       AppContext.logRepo().info('TRIGGER_CREATED', 'dailySummary 23:30');
     }
   });
   check('المنيو: مسجل عند تليجرام', function () {
-    AppContext.notifier().syncMenu();   // 📋 لو ناقص بيتسجل قبل الفحص — إصلاح ذاتي
+    AppContext.notifier().syncMenu();   // 📋 لو ناقص بيتسجل قبل الفحص، إصلاح ذاتي
     const res = AppContext.telegram().api('getMyCommands', {});
     if (!res.result || res.result.length < 20)
       throw new Error('مسجل ' + (res.result || []).length + ' بس');
   });
 
   const report = '🩺 <b>Doctor Report</b>\n\n' + lines.join('\n') + '\n\n' +
-    (failed === 0 ? '🎉 كله سليم — قفل محادثة البوت وافتحها وابعت /ping'
-                  : '⚠️ ' + failed + ' فشل — انسخ التقرير ده للمهندس');
+    (failed === 0 ? '🎉 كله سليم، قفل محادثة البوت وافتحها وابعت /ping'
+                  : '⚠️ ' + failed + ' فشل، انسخ التقرير ده للمهندس');
   try {
     AppContext.telegram().send(AppContext.secrets().chatId, report, { parse_mode: 'HTML' });
     Logger.log('Doctor: تم الإرسال ✅');
@@ -335,7 +335,7 @@ function doctor() {
   }
 }
 
-// 🔧 شغّلها مرة واحدة — بتوحد أسماء العيلة في كل المعاملات القديمة
+// 🔧 شغّلها مرة واحدة، بتوحد أسماء العيلة في كل المعاملات القديمة
 function fixPersonNames() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const tx = ss.getSheetByName('Transactions');
@@ -371,7 +371,7 @@ function testFlow() {
   Logger.log('5) Dashboard rebuilt');
   Logger.log('6) Month report:\n' + ctx.finance().month());
 }
-// ✈️ شغّلها مرة بعد التحديث — بيمسح البرومبت المخزن عشان يتولد بقاعدة العداد الجديدة
+// ✈️ شغّلها مرة بعد التحديث، بيمسح البرومبت المخزن عشان يتولد بقاعدة العداد الجديدة
 function migrateToV31() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const pr = ss.getSheetByName('Prompts');
@@ -381,5 +381,5 @@ function migrateToV31() {
       if (String(data[i][0]).trim() === CONFIG.PROMPT_KEY) { pr.deleteRow(i + 2); break; }
     }
   }
-  Logger.log('V31 done — البرومبت بقاعدة العداد هيتولد مع أول رسالة ✅');
+  Logger.log('V31 done: البرومبت بقاعدة العداد هيتولد مع أول رسالة ✅');
 }

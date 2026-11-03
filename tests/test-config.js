@@ -58,3 +58,27 @@ test('CONFIG: DEFAULT_CATEGORIES فيها الأساسيات', function() {
   expect(cats).toContain('Outings');
   expect(cats).toContain('Free Money');
 });
+
+// ═══ v41: حارس الشرطة الطويلة، مفيش em dash في أي ملف كود ═══
+test('الحارس: مفيش شرطة طويلة (em dash) في أي ملف كود', function () {
+  var EMDASH = String.fromCharCode(8212);   // علامة الشرطة الطويلة
+  expect(__repoFiles.length).toBeGreaterThanOrEqual(25);
+  __repoFiles.forEach(function (f) {
+    if (f.body.indexOf(EMDASH) !== -1)
+      throw new Error(f.name + ' فيه شرطة طويلة em dash عند حرف ' + f.body.indexOf(EMDASH));
+  });
+});
+
+test('DateUtils.shortDate: التاريخ من غير سنة', function () {
+  expect(DateUtils.shortDate('2026-11-30')).toBe('11-30');
+  expect(DateUtils.shortDate('2026-1-5')).toBe('01-05');
+  expect(DateUtils.shortDate('')).toBe('');
+});
+
+test('runwayLine: القبض مش موجود في السطر اليومي', function () {
+  // القالب نفسه مفيهوش {in} خالص
+  expect(STR.runwayLine.ar.indexOf('{in}')).toBe(-1);
+  expect(STR.runwayLine.ar.indexOf('قبضت')).toBe(-1);
+  expect(STR.runwayLine.ar.indexOf('باقي {left}')).not.toBe(-1);
+  expect(STR.runwayLine.en.indexOf('earned')).toBe(-1);
+});

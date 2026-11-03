@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# deploy.sh — TESTS -> BUMP -> COMMIT -> PUSH
+# deploy.sh: TESTS -> BUMP -> COMMIT -> PUSH
 # Fail-fast contract:
 #   * any failing gate = full stop with exit code 1
 #   * version is bumped ONLY after tests pass
@@ -18,10 +18,10 @@ abort() { printf '[ABORT] %s\n' "$*" >&2; exit 1; }
 
 # Any unexpected failure anywhere (including inside pipes) stops the deploy
 # and reports the exact line. -E makes the trap fire inside functions too.
-trap 'printf "[ABORT] unexpected failure at line %s — deploy stopped, nothing was pushed\n" "$LINENO" >&2' ERR
+trap 'printf "[ABORT] unexpected failure at line %s, deploy stopped, nothing was pushed\n" "$LINENO" >&2' ERR
 
 # ---------------------------------------------------------------------------
-# Gate 0 — preflight: verify everything we depend on actually exists
+# Gate 0: preflight, verify everything we depend on actually exists
 # ---------------------------------------------------------------------------
 say "Preflight"
 
@@ -37,21 +37,21 @@ VERSION_FILE=""
 for f in Config.js src/Config.js app/Config.js; do
   if [ -f "$f" ]; then VERSION_FILE="$f"; break; fi
 done
-[ -n "$VERSION_FILE" ] || abort "VERSION file not found (looked in ./ src/ app/ — edit VERSION_FILE list if yours lives elsewhere)"
+[ -n "$VERSION_FILE" ] || abort "VERSION file not found (looked in ./ src/ app/, edit VERSION_FILE list if yours lives elsewhere)"
 ok "version lives in: $VERSION_FILE"
 
 # ---------------------------------------------------------------------------
-# Gate 1 — tests: the hard gate. No bump / commit / push if this fails.
+# Gate 1: tests, the hard gate. No bump / commit / push if this fails.
 # ---------------------------------------------------------------------------
 say "Running test suite"
 
 if ! node tests/run.js; then
-  abort "tests failed — version NOT bumped, nothing committed, nothing pushed"
+  abort "tests failed, version NOT bumped, nothing committed, nothing pushed"
 fi
 ok "all tests green"
 
 # ---------------------------------------------------------------------------
-# Gate 2 — bump the version (only reached if tests passed)
+# Gate 2: bump the version (only reached if tests passed)
 # ---------------------------------------------------------------------------
 say "Bumping version"
 
@@ -62,7 +62,7 @@ read_version() {
 }
 
 OLD="$(read_version "$VERSION_FILE")"
-[ -n "${OLD:-}" ] || abort "could not read VERSION from $VERSION_FILE — check its syntax"
+[ -n "${OLD:-}" ] || abort "could not read VERSION from $VERSION_FILE, check its syntax"
 
 bump() {
   local v="$1" last rest
@@ -92,7 +92,7 @@ CHECK="$(read_version "$VERSION_FILE")"
 ok "version: ${OLD} -> ${NEW}"
 
 # ---------------------------------------------------------------------------
-# Gate 3 — commit everything (the bump guarantees there is always a change,
+# Gate 3: commit everything (the bump guarantees there is always a change,
 # so a failing commit here is a real error, not "nothing to commit")
 # ---------------------------------------------------------------------------
 say "Committing"
@@ -104,13 +104,13 @@ git commit -m "v${NEW}: ${MSG}" \
 ok "committed: v${NEW}: ${MSG}"
 
 # ---------------------------------------------------------------------------
-# Gate 4 — push (this is what triggers GitHub Actions -> Apps Script)
+# Gate 4: push (this is what triggers GitHub Actions -> Apps Script)
 # ---------------------------------------------------------------------------
 say "Pushing to GitHub"
 
 git push origin HEAD \
-  || abort "git push failed — CI was NOT triggered. Fix the error and run me again."
+  || abort "git push failed, CI was NOT triggered. Fix the error and run me again."
 
-ok "pushed — GitHub Actions will deploy and confirm on Telegram"
+ok "pushed, GitHub Actions will deploy and confirm on Telegram"
 
-printf '\nDone: v%s — deploy pipeline triggered.\n' "$NEW"
+printf '\nDone: v%s, deploy pipeline triggered.\n' "$NEW"

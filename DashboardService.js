@@ -59,7 +59,7 @@ class DashboardService {
     this.addChart(sh, Charts.ChartType.COLUMN,
       sh.getRange(2, 1, 7, 3), 'Monthly Trend', 13, 1);
 
-    // ── Block 3: 💳 دفتر الديون — رصيد لكل شخص (live) ──
+    // ── Block 3: 💳 دفتر الديون، رصيد لكل شخص (live) ──
     const people = {};
     this.tx.getAll().forEach(t => {
       if (CONFIG.DEBT_KINDS.indexOf(t.kind) !== -1 || CONFIG.LOAN_KINDS.indexOf(t.kind) !== -1)

@@ -33,7 +33,7 @@ test('persistAndReply: نفس الرسالة متتسجلش مرتين', functio
   d.persistAndReply(fakeMsg, { transactions: [mkTx()] });
   const afterFirst = AppContext.txRepo().getAll().length;
 
-  // نفس الرسالة تاني — لازم تترفض من غير أي صف جديد
+  // نفس الرسالة تاني، لازم تترفض من غير أي صف جديد
   d.persistAndReply(fakeMsg, { transactions: [mkTx()] });
   const afterSecond = AppContext.txRepo().getAll().length;
 

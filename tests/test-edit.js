@@ -76,7 +76,7 @@ test('التعديل: «امسح» مع رقم = مش مسح (أمان: بتفض
   const before = repo.getAll().length;
 
   // فيها رقم → مش مسح → مسار تصحيح الـ AI (في الاختبار الـ AI غير متاح
-  // فيرجع "مش فاهم" والقديم يفضل زي ما هو بالظبط — مفيش حاجة تتشال بالغلط)
+  // فيرجع "مش فاهم" والقديم يفضل زي ما هو بالظبط، مفيش حاجة تتشال بالغلط)
   d.handleEditReply({ chat: { id: 'test' }, message_id: 9108,
     reply_to_message: { message_id: 9107 }, text: 'امسح 65 مواصلات' });
 
@@ -157,11 +157,15 @@ test('RunwayRepository.refreshAmount بيكتب القبض الفعلي في ع�
   expect(Number(active[3])).toBe(v);                  // العمود = القبض المحسوب بالظبط
 });
 
-test('runwayLine بقى بيوري القبض', function () {
-  const line = AppContext.finance().runwayLine();
-  expect(line).not.toBeNull();
-  expect(String(line).indexOf('قبضت')).not.toBe(-1);
-  expect(String(line).indexOf('12,750')).not.toBe(-1);
+test('runwayLine: سطر هادي من غير قبضت ومن غير سنة', function () {
+  const EMDASH = String.fromCharCode(8212);   // علامة الشرطة الطويلة
+  const line = String(AppContext.finance().runwayLine());
+  expect(line.indexOf('باقي')).not.toBe(-1);
+  expect(line.indexOf('سماحك')).not.toBe(-1);
+  expect(line.indexOf('لحد 11-30')).not.toBe(-1);   // 📅 التاريخ من غير سنة
+  expect(line.indexOf('قبضت')).toBe(-1);            // ✈️ القبض بقى في /runway بس
+  expect(line.indexOf(EMDASH)).toBe(-1);            // مفيش شرطة طويلة في السطر
+  expect(line.indexOf('2026')).toBe(-1);            // مفيش سنة خالص
 });
 
 test('isDeleteIntent: كلمات المسح بتتعرف صح ومش بتشتغل بالغلط', function () {

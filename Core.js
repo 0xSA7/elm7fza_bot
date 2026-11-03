@@ -79,6 +79,11 @@ const DateUtils = {
     if (!s) return this.today();
     const m = String(s).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
     return m ? m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2) : this.today();
+  },
+  // 📅 تاريخ قصير من غير سنة للعرض بس (الشيت بيخزن yyyy-MM-dd كامل زي ما هو)
+  shortDate(s) {
+    const m = String(s || '').match(/\d{4}-(\d{1,2})-(\d{1,2})/);
+    return m ? ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2) : String(s || '');
   }
 };
 
@@ -164,7 +169,7 @@ class VersionNotifier {
       const cache = CacheService.getScriptCache();
       const key = 'VER_OK_' + CONFIG.VERSION;
       if (cache.get(key)) return;
-      this.syncMenu();          // 📋 اتأكد إن المنيو كامل — مرة واحدة مع كل نسخة جديدة
+      this.syncMenu();          // 📋 اتأكد إن المنيو كامل، مرة واحدة مع كل نسخة جديدة
       const saved = Number(this.props.getProperty('STORED_VERSION') || 0);
       if (CONFIG.VERSION > saved) {
         const text = CHANGELOG[CONFIG.VERSION] || ('🚀 <b>Version ' + CONFIG.VERSION + '</b>');
@@ -183,7 +188,7 @@ class VersionNotifier {
       if (!list.length) return;
       const cur = this.telegram.api('getMyCommands', {});
       const n = (cur && cur.result) ? cur.result.length : 0;
-      if (n >= list.length) return;          // المنيو كامل — مفيش حاجة
+      if (n >= list.length) return;          // المنيو كامل، مفيش حاجة
       this.telegram.api('setMyCommands', { commands: list });
       this.telegram.send(this.chatId,
         '📋 المنيو اتصلاح واتسجل فيه ' + list.length + ' أمر ✅\nاكتب / أو افتح زرار الـ Menu وشوفها');

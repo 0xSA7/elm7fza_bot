@@ -10,33 +10,33 @@ class PollingEngine {
   }
 
   poll() {
-    // 🔒 قفل عالمي: دورة واحدة بس في نفس اللحظة — عشان الرسالة ماتتعالجش مرتين
-    //    (الـ AI ممكن ياخد دقايق وهو مشغول — من غير القفل دورة تانية بترجع تسحب نفس الرسالة)
+    // 🔒 قفل عالمي: دورة واحدة بس في نفس اللحظة، عشان الرسالة ماتتعالجش مرتين
+    //    (الـ AI ممكن ياخد دقايق وهو مشغول، من غير القفل دورة تانية بترجع تسحب نفس الرسالة)
     const lock = LockService.getScriptLock();
-    if (!lock.tryLock(0)) return;   // في دورة شغالة بالفعل — نمشي في سلام
+    if (!lock.tryLock(0)) return;   // في دورة شغالة بالفعل، نمشي في سلام
     try {
       const started = Date.now();
       let offset = Number(this.props.getProperty('POLL_OFFSET') || 0);
-      let timeoutSec = 0;   // أول فحص فوري — لو فاضي نقفل بسرعة
+      let timeoutSec = 0;   // أول فحص فوري، لو فاضي نقفل بسرعة
 
       for (;;) {
         const updates = this.telegram.getUpdates(offset, CONFIG.POLLING.LIMIT, timeoutSec);
         if (!updates.length) break;
 
         updates.forEach(upd => {
-          // 🔁 نأكد السحب ل تليجرام قبل المعالجة — أي دورة تانية متجيبش نفس الرسالة،
+          // 🔁 نأكد السحب ل تليجرام قبل المعالجة، أي دورة تانية متجيبش نفس الرسالة،
           //    ولو المعالجة وقعت الرسالة بتنزل الطابور (12 ساعة) مش بتضيع
           offset = upd.update_id + 1;
           this.props.setProperty('POLL_OFFSET', String(offset));
 
-          // 🛡️ حجز مسبق قبل أي نداء AI — لو التنفيذ اتقتل عند حد الـ ٦ دقايق
+          // 🛡️ حجز مسبق قبل أي نداء AI، لو التنفيذ اتقتل عند حد الـ ٦ دقايق
           //    (جيميني معلّقة بدقايق) الرسالة بتفضل محفوظة في شيت الطابور،
-          //    والدورة الجاية بتحاولها تاني — مفيش رسالة تموت في السكوت تاني
+          //    والدورة الجاية بتحاولها تاني، مفيش رسالة تموت في السكوت تاني
           const slowAi = this.dispatcher.needsSlowAi(upd);
           if (slowAi) this.retryQueue.ensureRow(upd);
           try {
             this.dispatcher.process(upd);
-            if (slowAi) this.retryQueue.removeRow(upd.update_id);   // ✅ تمّت — نمسح الحجز
+            if (slowAi) this.retryQueue.removeRow(upd.update_id);   // ✅ تمّت، نمسح الحجز
           } catch (err) {
             if (isTransient(err)) {
               // ⏳ جيميناي overloaded / شبكة → طابور، مش فشل نهائي
@@ -58,7 +58,7 @@ class PollingEngine {
       }
       this.log.error('POLL: ' + ((e && e.message) || e), 'خطأ في دورة السحب', '');
     } finally {
-      // ⏳ الطابور جوه نفس القفل — مفيش محاولتين متوازيتين على نفس الرسالة أبداً
+      // ⏳ الطابور جوه نفس القفل، مفيش محاولتين متوازيتين على نفس الرسالة أبداً
       try { this.retryQueue.processDueLocked(this.dispatcher); }
       catch (e) { this.log.error('RETRY_CYCLE: ' + e, 'خطأ في معالجة الطابور', ''); }
       this.dispatcher.flushBackup();   // 💾 مزامنة واحدة للدورة كلها

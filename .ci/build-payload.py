@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""build-payload.py — بناء payload الـ API من ملفات المشروع
+"""build-payload.py: بناء payload الـ API من ملفات المشروع
 المدخل : الملفات في المجلد الحالي
 المخرج : /tmp/payload.json + عدد الملفات في stdout
 """

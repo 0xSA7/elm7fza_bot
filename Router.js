@@ -1,4 +1,4 @@
-// ═══════════════ Router.gs — التوجيه + الأوامر (كامل — V30) ═══════════════
+// ═══════════════ Router.gs: التوجيه + الأوامر (كامل، V30) ═══════════════
 class ButtonRouter {
   constructor() {
     this.aliases = {};
@@ -37,7 +37,7 @@ class UpdateDispatcher {
     if (this.deps.deduper.seen(update.update_id)) return;
 
     this.dispatch(msg, update.update_id);
-    // ✅ العلامة بعد نجاح المعالجة — لو المعالجة وقعت، الرسالة بترجع تتسحب تاني
+    // ✅ العلامة بعد نجاح المعالجة، لو المعالجة وقعت الرسالة بترجع تتسحب تاني
     this.deps.deduper.mark(update.update_id);
   }
 
@@ -72,7 +72,7 @@ class UpdateDispatcher {
     this.deps.telegram.send(msg.chat.id, I18n.t('unsupported', lang));
   }
 
-  // 🔄 إعادة معالجة من طابور المحاولات — بدون فحص تكرار
+  // 🔄 إعادة معالجة من طابور المحاولات، بدون فحص تكرار
   processRetry(msg) {
     const button = this.deps.buttons.match(msg.text);
     if (button) return this.deps.commands.run(button, this.deps, msg, '');
@@ -86,7 +86,7 @@ class UpdateDispatcher {
     if (msg.photo) return this.handlePhoto(msg);
   }
 
-  // ♻️ مسار النص: ريبلاي على رسالة متسجلة عندك = تعديل/مسح — مش إضافة جديدة
+  // ♻️ مسار النص: ريبلاي على رسالة متسجلة عندك = تعديل/مسح، مش إضافة جديدة
   routeText(msg) {
     if (msg.reply_to_message &&
         this.deps.txRepo.findByMessageId(msg.reply_to_message.message_id).length)
@@ -94,10 +94,10 @@ class UpdateDispatcher {
     return this.handleText(msg);
   }
 
-  // ♻️♻️ التعديل بالريبلاي — Reply على رسالتك القديمة واكتب التصحيح:
+  // ♻️♻️ التعديل بالريبلاي: Reply على رسالتك القديمة واكتب التصحيح:
   //    «كشف امي كان ب 600 مش 200» → الحركات القديمة تتشال والصح يتسجل مكانها،
   //    وريبلاي بـ «امسح» → الحركة تتشال خلاص والفلوس ترجع في كل الحسابات فوراً.
-  //    الرسالة الأصلية (رقمها) تفضل هي مرجع المجموعة — فتنفع تعمل ريبلاي تاني وتعدل تاني.
+  //    الرسالة الأصلية (رقمها) تفضل هي مرجع المجموعة، فتنفع تعمل ريبلاي تاني وتعدل تاني.
   handleEditReply(msg) {
     const rootMid = msg.reply_to_message.message_id;
     const originals = this.deps.txRepo.findByMessageId(rootMid);
@@ -111,7 +111,7 @@ class UpdateDispatcher {
     // 🗑️ «امسح» بالريبلاي = شيل حركات الرسالة دي كلها
     if (isDeleteIntent(msg.text)) return this.applyDeleteReply(msg, originals);
 
-    // 🧠 تصحيح بصيغة سريعة («600 دوا») — صفر توكنز
+    // 🧠 تصحيح بصيغة سريعة («600 دوا»)، صفر توكنز
     const intent = this.deps.brain ? this.deps.brain.try(msg.text) : null;
     if (intent && intent.type === 'tx' && intent.transactions.length) {
       const refDate = originals[originals.length - 1].tx.date;   // نحافظ على تاريخ الأصل
@@ -124,14 +124,14 @@ class UpdateDispatcher {
       return this.applyEdit(msg, { transactions: intent.transactions }, originals);
     }
 
-    // 🤖 تصحيح حر — AI بسياق الأصل كامل: بيحسب المجموعة الجديدة كاملة
+    // 🤖 تصحيح حر: AI بسياق الأصل كامل ببيحسب المجموعة الجديدة كاملة
     const result = this.deps.ai.processCorrection(
       msg.text,
       originals[0].tx.rawText || String(msg.reply_to_message.text || ''),
       originals.map(o => o.tx), msg.message_id);
     if (result.transactions.length) return this.applyEdit(msg, result, originals);
 
-    // ⚠️ مفهوش تعديل واضح — القديم زي ما هو بالظبط (مفيش أي حاجة اتشالت)
+    // ⚠️ مفهوش تعديل واضح، القديم زي ما هو بالظبط (مفيش أي حاجة اتشالت)
     const note = result.reply ? String(result.reply).slice(0, 300) : I18n.t('editUnclear', lang);
     this.deps.telegram.send(msg.chat.id, '🤔 ' + note);
     return true;
@@ -151,7 +151,7 @@ class UpdateDispatcher {
       if (!t.rawText) t.rawText = this.editRawText(originals, msg);
     });
 
-    // 🔁 إعادة محاولة من الطابور؟ القديم الحالي هو نتيجة التعديل السابق —
+    // 🔁 إعادة محاولة من الطابور؟ القديم الحالي هو نتيجة التعديل السابق:
     //    بنشيله وبنحط الجديد → نفس النتيجة مهما اتكرر (idempotent)
     this.deps.txRepo.deleteRows(this.deps.txRepo.findByMessageId(rootMid));
 
@@ -179,7 +179,7 @@ class UpdateDispatcher {
     const rw = this.deps.finance.runwayLine();
     if (rw) text += '\n\n' + rw;
     this.deps.telegram.send(msg.chat.id, text);
-    this.deps.log.info('TX_EDIT_DELETE', originals.length + ' صفوف اتشالت — الفلوس رجعت',
+    this.deps.log.info('TX_EDIT_DELETE', originals.length + ' صفوف اتشالت والفلوس رجعت',
       { updateId: msg.reply_to_message.message_id, lang: lang });
     this.deps.backup.markDirty();
     this.refreshRunwayAmount();
@@ -193,7 +193,7 @@ class UpdateDispatcher {
 
   // 🛡️ هل الرسالة دي هتروح للـ AI؟ (صوت/صورة/نص العقل المحلي مش فاهمه)
   //    محرك السحب بيسأل قبل المعالجة عشان يحجز الرسالة في طابور المحاولات
-  //    قبل النداء — فلو التنفيذ اتقتل عند حد الـ ٦ دقايق ماتضيعش
+  //    قبل النداء، فلو التنفيذ اتقتل عند حد الـ ٦ دقايق ماتضيعش
   needsSlowAi(update) {
     const msg = update && update.message;
     if (!msg) return false;
@@ -215,9 +215,9 @@ class UpdateDispatcher {
     const mid = msg.message_id;
     result.transactions.forEach(t => { t.messageId = mid; });   // 🔁 نفس معرف الرسالة على كل الصفوف
 
-    // 🔒 نفس الرسالة متتسجلش مرتين أبداً — مهما حصل إعادة محاولة من الطابور
+    // 🔒 نفس الرسالة متتسجلش مرتين أبداً، مهما حصل إعادة محاولة من الطابور
     if (this.deps.txRepo.existsByMessageId(mid)) {
-      this.deps.log.info('TX_DUP_SKIP', 'message ' + mid + ' — متسجلة قبل كده، اتجاهلت عشان ميتكررش', { updateId: mid });
+      this.deps.log.info('TX_DUP_SKIP', 'message ' + mid + ' متسجلة قبل كده، اتجاهلت عشان ميتكررش', { updateId: mid });
       this.deps.telegram.send(msg.chat.id, '✅ ' + I18n.t('dupSkipped', this.deps.lang.get()));
       return;
     }
@@ -228,7 +228,7 @@ class UpdateDispatcher {
       const start = result.transactions.length ? result.transactions[0].date : DateUtils.today();
       this.deps.runway.set(start, end,
         result.transactions.filter(t => t.kind === 'income').reduce((s, t) => s + t.amount, 0));
-      text += '\n\n✈️ ' + I18n.t('runwaySet', this.deps.lang.get(), { end: end });
+      text += '\n\n✈️ ' + I18n.t('runwaySet', this.deps.lang.get(), { end: DateUtils.shortDate(end) });
     }
     this.deps.telegram.send(msg.chat.id, text);
     this.deps.log.info('TX_SAVED',
@@ -239,7 +239,7 @@ class UpdateDispatcher {
   }
 
   handleText(msg) {
-    // 🧠 الطبقة المحلية — صفر توكنز (بحماية: لو التوصيلة ناقصة البوت شغال عادي)
+    // 🧠 الطبقة المحلية: صفر توكنز (بحماية: لو التوصيلة ناقصة البوت شغال عادي)
     const intent = this.deps.brain ? this.deps.brain.try(msg.text) : null;
     if (intent) {
       if (intent.type === 'greeting') {
@@ -267,7 +267,7 @@ class UpdateDispatcher {
     if (result.runwayUntil) {                    // ✈️ جملة عداد من غير معاملة
       const end = DateUtils.normalizeIso(result.runwayUntil);
       this.deps.runway.set(DateUtils.today(), end, 0);
-      this.deps.telegram.send(msg.chat.id, '✈️ ' + I18n.t('runwaySet', this.deps.lang.get(), { end: end }));
+      this.deps.telegram.send(msg.chat.id, '✈️ ' + I18n.t('runwaySet', this.deps.lang.get(), { end: DateUtils.shortDate(end) }));
       return;
     }
     this.deps.telegram.send(msg.chat.id, result.reply || I18n.t('fallbackReply', this.deps.lang.get()));
@@ -319,12 +319,12 @@ function registerCommands(registry) {
       const parts = String(a || '').trim().split(/\s+/).filter(String);
       const lang = d.lang.get();
       if (!parts.length) {
-        // 📊 تقرير كامل: القبض والصرف والباقي — والعمود بيتصلح لوحده
+        // 📊 تقرير كامل: القبض والصرف والباقي، والعمود بيتصلح لوحده
         try { d.runway.refreshAmount(d.txRepo); } catch (e) {}
         const st = d.finance.runwayStatus();
         if (!st) return send(d, m, I18n.t('runwayNone', lang), HTML);
         return send(d, m, I18n.t('runwayReport', lang, {
-          start: st.start, end: st.end,
+          start: DateUtils.shortDate(st.start), end: DateUtils.shortDate(st.end),
           in: TextUtils.fmt(st.inSince), out: TextUtils.fmt(st.spentSince),
           left: TextUtils.fmt(st.remaining), daily: TextUtils.fmt(st.allowed),
           n: st.daysLeft, icon: st.icon
@@ -338,7 +338,7 @@ function registerCommands(registry) {
       const start = parts.length > 1 ? DateUtils.normalizeIso(parts[0]) : DateUtils.today();
       d.runway.set(start, end, 0);
       try { d.runway.refreshAmount(d.txRepo); } catch (e) {}   // 💵 Amount = القبض الفعلي مش صفر
-      send(d, m, '✈️ ' + I18n.t('runwaySet', lang, { end: end }));
+      send(d, m, '✈️ ' + I18n.t('runwaySet', lang, { end: DateUtils.shortDate(end) }));
     })
     .register('debts',  (d, m) => send(d, m, d.finance.debtsReport(), HTML))
     .register('last',   (d, m) => send(d, m, d.finance.lastFive()))
@@ -356,10 +356,10 @@ function registerCommands(registry) {
       if (!rows.length) return send(d, m, '📂 No transactions in "' + cat + '" this month');
 
       let total = 0;
-      let text = '📂 <b>' + TextUtils.esc(cat) + ' — this month:</b>\n\n';
+      let text = '📂 <b>' + TextUtils.esc(cat) + ' · this month:</b>\n\n';
       rows.forEach(t => {
         total += t.amount;
-        text += '• ' + t.date + ' — ' + TextUtils.fmt(t.amount) + ' ' + t.currency +
+        text += '• ' + t.date + ' · ' + TextUtils.fmt(t.amount) + ' ' + t.currency +
                 (t.note ? ' (' + TextUtils.esc(t.note) + ')' : '') + '\n';
       });
       text += '\n💰 <b>Total:</b> ' + TextUtils.fmt(total) + ' EGP';
@@ -376,7 +376,7 @@ function registerCommands(registry) {
       const s = d.backup.stats();
       send(d, m, '🗜️ DB synced (gzip): ' + n + ' transactions\n' +
         '🧹 Cleanup: ' + clean.removed + ' old files\n' +
-        '📁 Drive: ' + s.files + ' files — ' + s.sizeKB + ' KB total');
+        '📁 Drive: ' + s.files + ' files · ' + s.sizeKB + ' KB total');
     })
     .register('status', (d, m) => send(d, m, statusReport(d), HTML))
     .register('debug',  (d, m) => send(d, m, debugReport(d), HTML))
@@ -419,13 +419,13 @@ function statusReport(d) {
 }
 
 function debugReport(d) {
-  let text = '🔧 <b>Debug — Version ' + CONFIG.VERSION + '</b>\n\n' +
+  let text = '🔧 <b>Debug · Version ' + CONFIG.VERSION + '</b>\n\n' +
     '🕒 ' + DateUtils.now() + '\n' +
     '📍 Offset: ' + (d.props.getProperty('POLL_OFFSET') || '0') + '\n' +
     '🌐 Lang: ' + d.lang.get() + '\n\n';
   try {
     const ok = ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'pollUpdates');
-    text += ok ? '⏰ Poll trigger: ON ✓\n' : '⚠️ Poll trigger missing — run installPolling\n';
+    text += ok ? '⏰ Poll trigger: ON ✓\n' : '⚠️ Poll trigger missing, run installPolling\n';
   } catch (e) {}
   text += d.brain ? '🧠 Local brain: ON ✓\n' : '⚠️ Brain not wired\n';
   try {
@@ -450,7 +450,7 @@ const DEBT_CMDS = {
   loan_out_off: 'lentold', loan_in_off: 'borrowedold'
 };
 
-// 🗑️ هل الريبلاي طلب مسح؟ — شرط صارم عشان مايمسحش بالغلط:
+// 🗑️ هل الريبلاي طلب مسح؟ شرط صارم عشان مايمسحش بالغلط:
 //    من غير أي أرقام + أول كلمة من كلمات المسح + كلام قصير (الباقي سيبه للـ AI)
 const DELETE_WORDS = ['امسح', 'امسحي', 'امسحها', 'احذف', 'احذفي', 'احذفها', 'الغي', 'الغها',
   'الغاء', 'إلغاء', 'اسحب', 'اسحبها', 'كان غلط', 'غلطان', 'متسجلش', 'متبصش', 'مكرر', 'متكرر',
@@ -477,7 +477,7 @@ function recordDebt(d, m, args, kind) {
   }
   // 🔒 نفس أمر الدين مش هيـتسجل مرتين (إعادة محاولة من الطابور مثلاً)
   if (d.txRepo.existsByMessageId(m.message_id)) {
-    d.log.info('TX_DUP_SKIP', 'debt cmd message ' + m.message_id + ' — متسجلة قبل كده', { updateId: m.message_id });
+    d.log.info('TX_DUP_SKIP', 'debt cmd message ' + m.message_id + ' متسجلة قبل كده', { updateId: m.message_id });
     return;
   }
   const tx = new Transaction({

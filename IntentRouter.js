@@ -1,5 +1,5 @@
-// ═══════════════ IntentRouter.js — الطبقة المحلية (كامل) ═══════════════
-// صفر توكنز — الحالات المؤكدة 100% بتعمل محلياً، وأي شك بيتسلم للـ AI
+// ═══════════════ IntentRouter.js، الطبقة المحلية (كامل) ═══════════════
+// صفر توكنز، الحالات المؤكدة 100% بتعمل محلياً، وأي شك بيتسلم للـ AI
 
 class IntentRouter {
     constructor(langService, finance) {
@@ -14,7 +14,7 @@ class IntentRouter {
     Object.keys(CONFIG.INTENTS.QUICK_MAP).forEach(k => {
       this.quickMap[this.norm(k)] = CONFIG.INTENTS.QUICK_MAP[k];
     });
-    // 🔧 نطبّع قوايم الأفعال والوحدات بنفس norm() — عشان ى/ي و أي فروق
+    // 🔧 نطبّع قوايم الأفعال والوحدات بنفس norm()، عشان ى/ي و أي فروق
     this.spendVerbs = (CONFIG.INTENTS.SPEND_VERBS || []).map(w => this.norm(w));
     this.incomeVerbs = (CONFIG.INTENTS.INCOME_VERBS || []).map(w => this.norm(w));
     this.skipTokens = {};
@@ -37,7 +37,7 @@ class IntentRouter {
       .trim();
   }
 
-  // مطابقة بالكلمات (كلمة أو كلمتين ورا بعض) — مش substring
+  // مطابقة بالكلمات (كلمة أو كلمتين ورا بعض)، مش substring
   hasAny(tokens, list) {
     const set = {};
     list.forEach(w => { set[w] = true; });
@@ -56,10 +56,10 @@ class IntentRouter {
     const t = this.norm(raw);
     if (!t) return null;
 
-    // 1️⃣ تحيات — تطابق كامل بس
+    // 1️⃣ تحيات، تطابق كامل بس
     if (this.greetings.indexOf(t) !== -1) return { type: 'greeting' };
 
-    // 2️⃣ أسئلة بيانات — من غير أرقام + كلمة استفهام + موضوع معروف
+    // 2️⃣ أسئلة بيانات، من غير أرقام + كلمة استفهام + موضوع معروف
     if (!/[0-9]/.test(t)) {
       const tokens = t.split(' ');
       const hasQ = raw.indexOf('?') !== -1 || raw.indexOf('؟') !== -1 ||
@@ -78,7 +78,7 @@ class IntentRouter {
   }
 
   quickEntry(t) {
-    // 🔥 المفكك المرن — "صرفت 20 ج اكل" / "دفعت 60 على المواصلات"
+    // 🔥 المفكك المرن، "صرفت 20 ج اكل" / "دفعت 60 على المواصلات"
     const flexible = this.parseFlexibleExpense(t);
     if (flexible) return flexible;
 
@@ -105,7 +105,7 @@ class IntentRouter {
     return w;
   }
 
-  // 🔥 المفكك المرن — يفهم صيغ المصاريف المصرية المتنوعة
+  // 🔥 المفكك المرن، يفهم صيغ المصاريف المصرية المتنوعة
     parseFlexibleExpense(t) {
     const tokens = t.split(' ').filter(Boolean);
     if (tokens.length < 2 || tokens.length > 6) return null;

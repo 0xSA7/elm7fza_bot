@@ -1,4 +1,4 @@
-// ═══════════════ منطق المالية — دخل حقيقي منفصل عن الديون ═══════════════
+// ═══════════════ منطق المالية: دخل حقيقي منفصل عن الديون ═══════════════
 class FinanceService {
   constructor(txRepo, budgetRepo, langService, runwayRepo) {
     this.tx = txRepo; this.budgets = budgetRepo; this.i18n = langService; this.runway = runwayRepo || null;
@@ -19,7 +19,7 @@ class FinanceService {
     return text;
   }
 
-  // التحذيرات للمصاريف بس — السلف عمرها ما تنقص من الميزانية
+  // التحذيرات للمصاريف بس، السلف عمرها ما تنقص من الميزانية
   budgetWarnings(transactions) {
     const limits = this.budgets.getAll();
     if (!Object.keys(limits).length) return '';
@@ -64,20 +64,20 @@ class FinanceService {
   runwayLine() {
     const st = this.runwayStatus();
     if (!st) return '';
-    return this.t('runwayLine', { in: TextUtils.fmt(st.inSince),
-                                   left: TextUtils.fmt(st.remaining),
+    // ✈️ سطر هادي: باقي وسماح بس (القبض الكامل في /runway) + تاريخ من غير سنة
+    return this.t('runwayLine', { left: TextUtils.fmt(st.remaining),
                                    daily: TextUtils.fmt(st.allowed),
-                                   end: st.end, icon: st.icon });
+                                   end: DateUtils.shortDate(st.end), icon: st.icon });
   }
 
   undo() {
     const tx = this.tx.deleteLast();
     if (!tx) return this.t('nothingToUndo');
     return '↩️ ' + this.t('undone') + ': ' + TextUtils.fmt(tx.amount) + ' ' +
-           tx.currency + ' — ' + tx.category + (tx.note ? ' (' + tx.note + ')' : '');
+           tx.currency + ' · ' + tx.category + (tx.note ? ' (' + tx.note + ')' : '');
   }
 
-  // 💳 دفتر الديون — رصيد لكل شخص
+  // 💳 دفتر الديون: رصيد لكل شخص
   debtBook() {
     const owed = {}, due = {};
     this.tx.getAll().forEach(t => {
@@ -95,7 +95,7 @@ class FinanceService {
       .map(p => ({ p: p, v: obj[p] }))
       .filter(x => Math.abs(x.v) >= 0.5)
       .map(x => x.v <= 0
-        ? '• ' + TextUtils.esc(x.p) + ' — ' + this.t('settledMark')
+        ? '• ' + TextUtils.esc(x.p) + ': ' + this.t('settledMark')
         : '• ' + TextUtils.esc(x.p) + ': ' + TextUtils.fmt(x.v) + ' EGP')
       .join('\n');
     const owedLines = fmtSide(book.owed);
@@ -105,10 +105,10 @@ class FinanceService {
     const owedTotal = Object.keys(book.owed).reduce((s, p) => s + Math.max(0, book.owed[p]), 0);
     const dueTotal  = Object.keys(book.due).reduce((s, p) => s + Math.max(0, book.due[p]), 0);
 
-    let text = '💳 <b>Debt Book — ' +
+    let text = '💳 <b>Debt Book · ' +
       (this.i18n.get() === 'ar' ? 'دفتر الديون' : 'All time') + '</b>\n\n';
-    text += this.t('owedTitle') + '\n' + (owedLines || '—') + '\n\n';
-    text += this.t('dueTitle') + '\n' + (dueLines || '—') + '\n\n';
+    text += this.t('owedTitle') + '\n' + (owedLines || '-') + '\n\n';
+    text += this.t('dueTitle') + '\n' + (dueLines || '-') + '\n\n';
     if (owedTotal > dueTotal)
       text += this.t('netOwedMore') + ' ' + TextUtils.fmt(owedTotal - dueTotal) + ' EGP';
     else if (dueTotal > owedTotal)
@@ -118,7 +118,7 @@ class FinanceService {
     return text;
   }
 
-  // التقرير العام — دخل حقيقي وصرف حقيقي، والديون حركة منفصلة
+  // التقرير العام: دخل حقيقي وصرف حقيقي، والديون حركة منفصلة
   report(label, matchFn) {
     const rows = this.tx.getAll().filter(t => matchFn(t.date));
     if (!rows.length) return label + '\n' + this.t('noData');
@@ -163,7 +163,7 @@ class FinanceService {
     return out;
   }
 
-// 🌙 الرسالة اليومية — عداد + ميزانية بكرة (النصوص كلها في STR)
+// 🌙 الرسالة اليومية: عداد + ميزانية بكرة (النصوص كلها في STR)
   today() {
       const t0 = DateUtils.today();
       const WD = ['الأحد', 'الاتنين', 'التلات', 'الأربع', 'الخميس', 'الجمعة', 'السبت'];
@@ -198,7 +198,7 @@ class FinanceService {
       return L.join('\n');
   }
 
-  // أسماء التصنيفات بالعربي — من مفاتيح cat* في STR، مع fallback للاسم الأصلي
+  // أسماء التصنيفات بالعربي: من مفاتيح cat* في STR، مع fallback للاسم الأصلي
   catLabel(c) {
       try {
           const s = this.t('cat' + String(c).replace(/[^A-Za-z]/g, ''));
@@ -291,7 +291,7 @@ class FinanceService {
     return 'Date,Amount,Currency,Type,Category,Note\n' + csv.join('\n');
   }
 
-    // سياق موسّع للـ AI — ملخص + آخر المعاملات بالتفاصيل
+    // سياق موسّع للـ AI: ملخص + آخر المعاملات بالتفاصيل
   compactContextForAi() {
     const all = this.tx.getAll();
     const rows = all.filter(t => t.date.startsWith(DateUtils.month()));
@@ -313,7 +313,7 @@ class FinanceService {
       s += '\nBy category: ' + catKeys.map(c => c + ' ' + TextUtils.fmt(byCat[c])).join(', ');
     }
 
-    // 🔥 آخر 15 معاملة بالتفاصيل — ده اللي بيسمح للـ AI يجاوب أسئلة محددة
+    // 🔥 آخر 15 معاملة بالتفاصيل، ده اللي بيسمح للـ AI يجاوب أسئلة محددة
     const recent = all
       .filter(t => t.date.startsWith(DateUtils.month()) &&
                    t.kind !== 'loan_in_off' && t.kind !== 'loan_out_off')

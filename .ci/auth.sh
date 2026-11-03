@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# ═══ auth.sh — استخراج التوكن من CLASPRC_JSON ═══
+# ═══ auth.sh: استخراج التوكن من CLASPRC_JSON ═══
 set -euo pipefail
 
 require() {
-  test -n "${!1:-}" || { echo "::error::$1 مفقود — راجع الـ secrets"; exit 1; }
+  test -n "${!1:-}" || { echo "::error::$1 مفقود، راجع الـ secrets"; exit 1; }
 }
 
 require CLASPRC_JSON
@@ -27,14 +27,14 @@ CLIENT_SECRET=$(echo "$CLASPRC_JSON" | jq -r '
   .oauth2ClientSettings.clientSecret //
   empty')
 
-# ── لو فشل الاستخراج — نطبع البنية (المسارات بس، القيم مخفية) ──
+# ── لو فشل الاستخراج، نطبع البنية (المسارات بس، القيم مخفية) ──
 if [ -z "$REFRESH_TOKEN" ] || [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
   echo "::error::CLASPRC_JSON بنيته مش متوقعة"
   echo ""
-  echo "📋 المسارات الموجودة في الملف (القيم مخفية — آمن للمشاركة):"
+  echo "📋 المسارات الموجودة في الملف (القيم مخفية، آمن للمشاركة):"
   echo "$CLASPRC_JSON" | jq -r 'paths(scalars) | join(" → ")' | sort -u | head -30
   echo ""
-  echo "📌 انسخ المسارات دي وابعتهاله — وهظبطلك السكربت فوراً"
+  echo "📌 انسخ المسارات دي وابعتهاله، وهظبطلك السكربت فوراً"
   exit 1
 fi
 
@@ -47,7 +47,7 @@ RESPONSE=$(curl -s -X POST https://oauth2.googleapis.com/token \
 
 ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
 test -n "$ACCESS_TOKEN" || {
-  echo "::error::فشل تبديل التوكن — رد جوجل:"
+  echo "::error::فشل تبديل التوكن، رد جوجل:"
   echo "$RESPONSE" | jq . 2>/dev/null || echo "$RESPONSE"
   exit 1
 }
@@ -57,7 +57,7 @@ test -f .clasp.json || { echo "::error::.clasp.json مش في الريبو"; exi
 SCRIPT_ID=$(jq -r '.scriptId' .clasp.json)
 test -n "$SCRIPT_ID" || { echo "::error::scriptId فاضي في .clasp.json"; exit 1; }
 
-# ── التصدير (في CI بس — محلياً بنجاح بس من غير تصدير) ──
+# ── التصدير (في CI بس، محلياً بنجاح بس من غير تصدير) ──
 if [ -n "${GITHUB_ENV:-}" ]; then
   echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> "$GITHUB_ENV"
   echo "SCRIPT_ID=${SCRIPT_ID}" >> "$GITHUB_ENV"
