@@ -43,10 +43,28 @@ class IntelligenceService {
 
   // لو الرسالة فيها أرقام → غالباً معاملة → بنوفر توكنز السياق
   // الصوت مستحنب مسبقاً → السياق موجود دايماً
+  // 🧑‍🤝‍🧑 قايمة الناس لازم تمشي في الحالتين — من غيرها الـ AI
+  //    يهجّي «شلبي» بالإنجليزي وأنت مسجلها بالعربي فيتحسب شخص جديد
   contextLine(text, isVoice) {
+    const people = this.knownPeopleLine();
     if (!isVoice && text && /[0-9٠-٩]/.test(text))
-      return 'Context: (transaction expected — no data context needed)';
-    return 'Context: ' + this.finance.compactContextForAi();
+      return 'Context: (transaction expected — no data context needed)' + people;
+    return 'Context: ' + this.finance.compactContextForAi() + people;
+  }
+
+  // 🧑‍🤝‍🧑 أسماء الناس المسجلة في الدفتر — سطر صغير (~٣٠ توكن) بيمشي مع كل نداء:
+  //    قصة الباص: «وريدت 900ج لشلبي» فيها أرقام فالسياق كله كان بيتشال،
+  //    والـ AI مش كان شايف إن «شلبي» مسجل — فكتب «Shalaby» وطلع شخص جديد
+  knownPeopleLine() {
+    try {
+      const book = this.finance.debtBook();
+      const people = Object.keys(book.owed).concat(Object.keys(book.due))
+        .filter(function (p, i, arr) { return arr.indexOf(p) === i; })
+        .slice(0, 15);
+      if (!people.length) return '';
+      return '\nPeople already in the debt book: ' + people.join(', ') +
+        '. For any loan/repay/repayment: if the person is one of these (same human, ANY spelling or transliteration, e.g. شلبي=Shalaby=shalaby), you MUST reuse the exact spelling from this list. Only use a different new name if he truly mentions a new person.';
+    } catch (e) { return ''; }
   }
 
   // 📝 نص: نداء واحد — معاملة أو إجابة سؤال
