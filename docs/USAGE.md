@@ -11,8 +11,8 @@ Send money events as you'd say them out loud. That's the whole product:
 صرفت ٣٥ مواصلات
 اكل 120
 كشك 15 وب-extension بيبسي 20
-قبضت 12750
-سلفت شلبي 200
+قبضت 5000
+سلفت حسن 200
 ```
 
 The bot answers with what it saved, plus a live runway line (if one is active):
@@ -21,7 +21,7 @@ The bot answers with what it saved, plus a live runway line (if one is active):
 ✅ اتسجلت:
 🔴 35 · مواصلات (TRANSPORT)
 
-✈️ باقي 10,175 · سماحك 363 ج/يوم لحد 11-30 🔴
+✈️ باقي 4,575 · سماحك 183 ج/يوم لحد 11-30 🔴
 ```
 
 ## Input modes
@@ -39,7 +39,7 @@ Quick grammar for instant saves:
 ```
 [number] [shortcut]          50 مواصلات
 [verb] [number] [shortcut]   صرفت 120 اكل
-[income verb] [number]       قبضت 12750
+[income verb] [number]       قبضت 5000
 ```
 
 Shortcuts are configurable (`QUICK_MAP` in Config.js): اكل/غدا/فطار/سناكس →
@@ -91,16 +91,16 @@ Report:
 ```
 ✈️ العداد · من 11-05 لحد 11-30
 
-💵 القبض في الفترة: 12,750ج
-💸 الصرف: 2,575ج
-💰 الباقي: 10,175ج
-🎯 سماح يومي: 363ج (لسه 28 يوم) 🔴
+💵 القبض في الفترة: 5,000ج
+💸 الصرف: 425ج
+💰 الباقي: 4,575ج
+🎯 سماح يومي: 183ج (لسه 25 يوم) 🔴
 ```
 
 After every save/edit/delete you get the calm one-liner:
 
 ```
-✈️ باقي 10,175 · سماحك 363 ج/يوم لحد 11-30 🔴
+✈️ باقي 4,575 · سماحك 183 ج/يوم لحد 11-30 🔴
 ```
 
 🟢 means today's burn is within allowance, 🔴 means you're over today's pace.
@@ -112,7 +112,7 @@ without the year; the sheet keeps full dates. `/runway cancel` ends it.
 Deterministic commands, no AI, optional date at the end:
 
 ```
-/lent شلبي 200 [2026-08-28]      سلفت لحد
+/lent حسن 200 [2026-08-28]      سلفت لحد
 /borrowed اسم 500                 استلفت
 /repaid اسم 200                   سددت دين
 /collected اسم 200                استردت سلفة
@@ -120,12 +120,12 @@ Deterministic commands, no AI, optional date at the end:
 /borrowedold اسم 500              دين قديم (من قبل التتبع)
 ```
 
-In free text these work too: «سددت 900 لشلبي» is parsed and applied to the
+In free text these work too: «سددت 500 لحسن» is parsed and applied to the
 existing balance. `/debts` prints both books:
 
 ```
 🟠 اللي عليا (لازم أرد):
-شلبي: 2,600ج
+حسن: 2,000ج
 
 🔵 اللي ليا (عندهم لي):
 ...
@@ -134,9 +134,24 @@ existing balance. `/debts` prints both books:
 ```
 
 Repayments reduce the person's balance (they're `repay_out` rows, not new
-people). Names unify automatically: «شلبي», «Shalaby», «SHALABY» are one
+people). Names unify automatically: «حسن», «Hassan», «HASSAN» are one
 entry, and the AI is shown your known-people list on every message so it
 reuses spellings instead of inventing new ones.
+
+### Where your people's names live (v43)
+
+Real names are data, not code. Family words (امي/ابويا/اخويا) are built-in
+vocabulary; your friends' names live in one Script Property:
+
+```
+PERSON_ALIASES = {"حسن":"Hassan","حسني":"Hassan"}
+```
+
+Set it once via `setPersonAliases()` in the Apps Script editor (edit the
+example inside first, or set the property by hand in Project Settings →
+Script Properties). Beyond that the bot learns on its own: every name the
+debt book already has is shown to the AI on every message, so it reuses your
+exact spelling. Nothing about your actual friends ever lands in the repo.
 
 ## Commands reference
 

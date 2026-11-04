@@ -97,27 +97,55 @@ const TextUtils = {
   }
 };/**
  * Canonical person name:
- *   1. Arabic family variants -> canonical (امي -> Mother)
- *   2. Any casing of a canonical name -> canonical (mother -> Mother)
- * Non-family names pass through untouched (sensei stays sensei).
- * Works whether PERSON_MAP is top-level or CONFIG.PERSON_MAP.
+ *   1. Arabic family variants -> canonical (امي -> Mother) [كلمات عامة من CONFIG.PERSON_MAP]
+ *   2. أسماء الأصحاب -> canonical من Script Properties (PERSON_ALIASES بصيغة JSON)
+ *   3. Any casing of a canonical name -> canonical (mother -> Mother)
+ * أي اسم جديد بيعدي زي ما هو. الأسماء الحقيقية عمرها ما تتكتب في الكود.
  */
-function _personMap() {
-  if (typeof PERSON_MAP !== 'undefined' && PERSON_MAP) return PERSON_MAP;
-  if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.PERSON_MAP) return CONFIG.PERSON_MAP;
-  return {};
+// القراءة مرة واحدة لكل تنفيذ (الأسماء نادراً ما تتغير)؛
+// التيستز بتنده __resetPersonCaches() بعد ما تغيّر PERSON_ALIASES.
+let _personCache = { raw: null, map: null, ci: null, ciRaw: null };
+function __resetPersonCaches() { _personCache = { raw: null, map: null, ci: null, ciRaw: null }; }
+
+function _personAliases() {
+  if (_personCache.raw !== null) return _personCache.map;
+  let raw = '';
+  try {
+    raw = String(PropertiesService.getScriptProperties().getProperty('PERSON_ALIASES') || '');
+  } catch (e) { raw = ''; }
+  const parsed = raw ? TextUtils.safeJson(raw) : {};
+  const map = {};
+  Object.keys(parsed || {}).forEach(function (k) {
+    const v = parsed[k];
+    if (typeof v === 'string' && v.trim()) map[String(k).trim()] = v.trim();
+  });
+  _personCache.raw = raw;
+  _personCache.map = map;
+  return map;
 }
 
-let _personCiIndexCache = null;
+function _personMap() {
+  const base = (typeof PERSON_MAP !== 'undefined' && PERSON_MAP) ? PERSON_MAP
+    : ((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.PERSON_MAP) ? CONFIG.PERSON_MAP : {});
+  const extra = _personAliases();
+  if (!extra || !Object.keys(extra).length) return base;
+  const merged = {};
+  Object.keys(base).forEach(function (k) { merged[k] = base[k]; });
+  Object.keys(extra).forEach(function (k) { merged[k] = extra[k]; });
+  return merged;
+}
+
 function _personCiIndex() {
-  if (_personCiIndexCache) return _personCiIndexCache;
+  _personAliases();                       // يخلي _personCache.raw جاهز للتحقق
+  if (_personCache.ci && _personCache.ciRaw === _personCache.raw) return _personCache.ci;
   const map = _personMap();
   const idx = {};
   Object.keys(map).forEach(function (k) {
     idx[k.toLowerCase()] = map[k];
     idx[String(map[k]).toLowerCase()] = map[k];
   });
-  _personCiIndexCache = idx;
+  _personCache.ci = idx;
+  _personCache.ciRaw = _personCache.raw;
   return idx;
 }
 

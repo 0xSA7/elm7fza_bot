@@ -91,7 +91,7 @@ function migrateToV27() {
         data[r][3] = 'loan_in'; data[r][4] = 'Father'; fixed++;
       } else if (/والدتي|امي|اميا|ماما|mother|mom/.test(text)) {
         data[r][3] = 'loan_in'; data[r][4] = 'Mother'; fixed++;
-      } else if (/هدية|هديه|شعيب|gift/.test(text)) {
+      } else if (/هدية|هديه|gift/.test(text)) {
         data[r][4] = 'Free Money'; fixed++;
       } else if (/كارت|معايا قبل|رصيد|card/.test(text)) {
         data[r][4] = 'Own Money'; fixed++;
@@ -179,4 +179,18 @@ function migrateToV31() {
     }
   }
   Logger.log('V31 done: البرومبت بقاعدة العداد هيتولد مع أول رسالة ✅');
+}
+
+// 🔒 v43: تسجيل أسماء الأصحاب في Script Properties (بياناتك في حسابك بس، مش في الكود)
+// شغّلها مرة واحدة من محرر Apps Script بعد ما تبدّل المثال بأسمائك الحقيقية.
+// الصيغة: { "كل كتابة بالعربي": "الاسم الموحد اللي يتكتب في الشيت" }
+// بعد أي تعديل بعدها مش محتاج تعمل حاجة: القراءة بتاعة الأسماء بتتحدث كل تنفيذ.
+function setPersonAliases() {
+  const aliases = {
+    'مثال-بالعربي': 'Example',
+    'مثال-تهجئة-تانية': 'Example'
+  };
+  PropertiesService.getScriptProperties().setProperty(
+    'PERSON_ALIASES', JSON.stringify(aliases));
+  Logger.log('PERSON_ALIASES saved: ' + Object.keys(aliases).length + ' spellings');
 }

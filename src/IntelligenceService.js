@@ -45,7 +45,7 @@ class IntelligenceService {
   // لو الرسالة فيها أرقام → غالباً معاملة → بنوفر توكنز السياق
   // الصوت مستحنب مسبقاً → السياق موجود دايماً
   // 🧑‍🤝‍🧑 قايمة الناس لازم تمشي في الحالتين، من غيرها الـ AI
-  //    يهجّي «شلبي» بالإنجليزي وأنت مسجلها بالعربي فيتحسب شخص جديد
+  //    يهجّي اسم صاحبك بالإنجليزي وأنت مسجلها بالعربي فيتحسب شخص جديد
   contextLine(text, isVoice) {
     const people = this.knownPeopleLine();
     if (!isVoice && text && /[0-9٠-٩]/.test(text))
@@ -54,8 +54,8 @@ class IntelligenceService {
   }
 
   // 🧑‍🤝‍🧑 أسماء الناس المسجلة في الدفتر: سطر صغير (~٣٠ توكن) بيمشي مع كل نداء:
-  //    قصة الباص: «وريدت 900ج لشلبي» فيها أرقام فالسياق كله كان بيتشال،
-  //    والـ AI مش كان شايف إن «شلبي» مسجل، فكتب «Shalaby» وطلع شخص جديد
+  //    الرسالة فيها أرقام كان السياق كله بيتشال، والـ AI مش كان شايف
+  //    إن الشخص ده مسجل، فكان بيخترع تهجئة جديدة وبيطلع شخص جديد
   knownPeopleLine() {
     try {
       const book = this.finance.debtBook();
@@ -64,7 +64,7 @@ class IntelligenceService {
         .slice(0, 15);
       if (!people.length) return '';
       return '\nPeople already in the debt book: ' + people.join(', ') +
-        '. For any loan/repay/repayment: if the person is one of these (same human, ANY spelling or transliteration, e.g. شلبي=Shalaby=shalaby), you MUST reuse the exact spelling from this list. Only use a different new name if he truly mentions a new person.';
+        '. For any loan/repay/repayment: if the person is one of these (same human, ANY spelling or transliteration, e.g. حسن=Hassan=hassan), you MUST reuse the exact spelling from this list. Only use a different new name if he truly mentions a new person.';
     } catch (e) { return ''; }
   }
 

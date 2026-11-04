@@ -43,7 +43,7 @@ piece works, and how to build your own from zero.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Every file, the message lifecycle, idempotency design, data model, runway math |
 | [docs/USAGE.md](docs/USAGE.md) | The full user manual with Egyptian Arabic examples for every command |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | deploy.sh gates, the GitHub Actions pipeline, secrets, rollback |
-| [docs/TESTING.md](docs/TESTING.md) | The vm-based test harness, the 78 tests, how to add your own |
+| [docs/TESTING.md](docs/TESTING.md) | The vm-based test harness, the 80 tests, how to add your own |
 | [docs/SECURITY.md](docs/SECURITY.md) | Threat model, what is secret and where it lives, going-public checklist |
 
 ## Repository map
@@ -74,7 +74,7 @@ elm7fza_bot/
 │   └── appsscript.json        the manifest (Africa/Cairo, V8)
 ├── deploy.sh                  TESTS → BUMP → COMMIT → PUSH gate script
 ├── docs/                      this documentation set
-├── tests/                     run.js harness + 8 suites (78 tests)
+├── tests/                     run.js harness + 8 suites (80 tests)
 ├── .ci/                       auth.sh, build-payload.py, push.sh, verify.sh, notify.sh
 └── .github/workflows/         deploy.yml: the 7-stage pipeline
 ```
@@ -109,8 +109,9 @@ single responsibility.
 | v37 | Global poll lock + save dedup + `/doctor` + menu self-heal (no double processing) |
 | v39 | Write-ahead queue reservation before AI calls (no more silent message loss) |
 | v40 | Reply-to-edit, delete-by-reply with money-back, live Runway amount column |
-| v41 | Unified debt-book names (شلبي = Shalaby), calm runway line, yearless dates, zero em dashes |
+| v41 | Unified debt-book names (any spelling of a person = one entry), calm runway line, yearless dates, zero em dashes |
 | v42 | Repository restructure: src/ layout, single-responsibility modules (Config/Strings/Changelog, Router/Commands, App/Migrations). Zero behavior change |
+| v43 | Privacy pass: friend names live in the `PERSON_ALIASES` Script Property instead of code, all fixtures and doc examples are synthetic |
 
 ## Quick start
 

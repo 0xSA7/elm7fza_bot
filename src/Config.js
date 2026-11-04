@@ -1,7 +1,7 @@
 // ═══════════════ الإعدادات ═══════════════
 // الطبقة: Config · ثوابت التشغيل: تابات، تصنيفات، عقل محلي، أنواع حركات، سحب ومحاولات
 const CONFIG = {
-  VERSION: 42,
+  VERSION: 43,
   MODEL: 'gemini-3.8-flash',
   SHEETS: {
     TX: 'Transactions', CATEGORIES: 'Categories', BUDGETS: 'Budgets',
@@ -30,11 +30,14 @@ const CONFIG = {
     'ملابس': 'Clothes', 'هدايا': 'Gifts', 'شخصي': 'Personal', 'مرتب': 'Salary',
     'دخل إضافي': 'Free Money', 'غيره': 'Other'
   },
-    PERSON_MAP: {
+  // 🧑‍🤝‍🧑 كلمات العيلة: عامة ومش بيانات شخصية.
+  // أسماء الأصحاب (بيانات خاصة) عمرها ما تتكتب هنا: بتتقرا وقت التشغيل من
+  // Script Properties (PERSON_ALIASES بصيغة {"الاسم":"Canonical"})
+  // وشوف setPersonAliases() في Migrations.js و docs/USAGE.md.
+  PERSON_MAP: {
     'امي': 'Mother', 'والدتي': 'Mother', 'ماما': 'Mother', 'اميا': 'Mother',
     'ابويا': 'Father', 'والدي': 'Father', 'بابا': 'Father', 'ابي': 'Father',
-    'اخويا': 'Brother', 'اختي': 'Sister',
-    'شلبي': 'Shalaby', 'شلبى': 'Shalaby'
+    'اخويا': 'Brother', 'اختي': 'Sister'
   },
 
   // 🧠 العقل المحلي: الحالات المؤكدة اللي مش محتاجة AI

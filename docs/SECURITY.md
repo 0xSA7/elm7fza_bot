@@ -60,6 +60,12 @@ deploy runs from.
 - The **Transactions and Log tabs** contain your real messages and spending.
   They live in your private Sheet and never in the repo. Keep it that way:
   no link-sharing, no screenshots in issues.
+- **People's names and real amounts** never live in the repo (v43): friend
+  names sit in the `PERSON_ALIASES` Script Property (see docs/USAGE.md),
+  family words in code are generic vocabulary (امي/ابويا/اخويا), and every
+  number in tests and docs is synthetic. If a real name or balance ever
+  slips into a commit, scrub history before going public
+  (`git filter-repo --replace-text`).
 - Your **commit email** becomes public in a public repo. GitHub's advice:
   commit with `ID+login@users.noreply.github.com` (for this account:
   `109046494+0xSA7@users.noreply.github.com`) instead of a personal Gmail,
@@ -84,6 +90,10 @@ Before flipping the repo to public:
    files reference names only).
 6. Keep the Log sheet out of any published screenshots.
 7. Add a LICENSE so people can actually reuse it.
+8. Friend names: search the whole history, not just HEAD
+   (`git log -p --all | grep -F "الاسم"` for each name you ever typed). If
+   anything shows up, run `git filter-repo --replace-text` first; it rewrites
+   every SHA, so force-push and re-clone after.
 
 ## Known limitations (honesty section)
 

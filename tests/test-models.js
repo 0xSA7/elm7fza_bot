@@ -19,7 +19,7 @@ test('Transaction: kind غير صالح يرجع expense', function() {
 });
 
 test('Transaction: off-book loan بدون علامة سالب', function() {
-  var tx = Transaction.fromGemini({ amount: 200, kind: 'loan_out_off', category: 'ghan dy' }, 'test', 1);
+  var tx = Transaction.fromGemini({ amount: 200, kind: 'loan_out_off', category: 'friend1' }, 'test', 1);
   expect(tx.kind).toBe('loan_out_off');
   var line = tx.displayLine('ar');
   expect(line).toContain('🔷');
@@ -27,7 +27,7 @@ test('Transaction: off-book loan بدون علامة سالب', function() {
 });
 
 test('Transaction: loan_out ليه علامة سالب', function() {
-  var tx = Transaction.fromGemini({ amount: 200, kind: 'loan_out', category: 'sensei' }, 'test', 1);
+  var tx = Transaction.fromGemini({ amount: 200, kind: 'loan_out', category: 'friend2' }, 'test', 1);
   var line = tx.displayLine('ar');
   expect(line).toContain('−');
 });
@@ -65,7 +65,7 @@ test('PERSON_MAP: "امي" تتحول لـ Mother في المعاملات', func
 
 test('PERSON_MAP: أسماء الأصحاب مبتتغيرش', function() {
   var tx = Transaction.fromGemini(
-    { amount: 200, kind: 'loan_out', category: 'ghan dy' }, 'test', 1
+    { amount: 200, kind: 'loan_out', category: 'friend1' }, 'test', 1
   );
-  expect(tx.category).toBe('ghan dy');
+  expect(tx.category).toBe('friend1');
 });

@@ -192,8 +192,11 @@ Dashboard:    charts, rebuilt by /dashboard
 
 `/debts` groups `loan_in − repay_out` per person (what I owe), `loan_out −
 repay_in` (what I'm owed), and prints the net position. Person names are
-normalized through `PERSON_MAP` plus a known-people line injected into every
-AI prompt, so «شلبي», «Shalaby» and «SHALABY» are one person (v41).
+normalized through `PERSON_MAP` (generic family vocabulary in Config.js)
+plus `PERSON_ALIASES` (your real friends' names, a Script Property JSON
+merged at runtime) plus a known-people line injected into every AI prompt,
+so «حسن», «Hassan» and «HASSAN» are one person (v41, v43). No real name
+ships in the repository.
 
 ### Runway math
 
@@ -212,7 +215,7 @@ icon       = 🟢 if burn ≤ allowed else 🔴
 After every save/edit/delete you get one calm line:
 
 ```
-✈️ باقي 10,175 · سماحك 363 ج/يوم لحد 11-30 🔴
+✈️ باقي 4,575 · سماحك 183 ج/يوم لحد 11-30 🔴
 ```
 
 `/runway` with no arguments prints the full report: income in period, spent,

@@ -126,7 +126,7 @@ test('runwayStatus: القبض والصرف والبداية راجعين صح',
   const rw = AppContext.runwayRepo();
 
   rw.set('2026-10-28', '2026-11-30', 0);
-  repo.add(new Transaction({ date: '2026-10-28', amount: 12750, kind: 'income',
+  repo.add(new Transaction({ date: '2026-10-28', amount: 5000, kind: 'income',
                              category: 'Salary', messageId: 9120 }));
   repo.add(new Transaction({ date: '2026-10-29', amount: 200, kind: 'expense',
                              category: 'Health', messageId: 9121 }));
@@ -135,9 +135,9 @@ test('runwayStatus: القبض والصرف والبداية راجعين صح',
   expect(st).not.toBeNull();
   expect(st.start).toBe('2026-10-28');
   expect(st.end).toBe('2026-11-30');
-  expect(st.inSince).toBe(12750);        // 💵 القبض في الفترة
+  expect(st.inSince).toBe(5000);         // 💵 القبض في الفترة
   expect(st.spentSince >= 200).toBe(true);
-  expect(st.remaining).toBe(12750 - st.spentSince);
+  expect(st.remaining).toBe(5000 - st.spentSince);
 });
 
 test('RunwayRepository.refreshAmount بيكتب القبض الفعلي في عمود Amount', function () {
@@ -146,7 +146,7 @@ test('RunwayRepository.refreshAmount بيكتب القبض الفعلي في ع�
 
   const v = rw.refreshAmount(repo);
   expect(v).not.toBeNull();
-  expect(v).toBeGreaterThanOrEqual(12750);            // كل دخل النافذة
+  expect(v).toBeGreaterThanOrEqual(5000);             // كل دخل النافذة
 
   const rows = rw.readAll();
   let active = null;

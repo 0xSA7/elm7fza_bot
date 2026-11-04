@@ -1,4 +1,4 @@
-# TESTING · 78 tests against a fake Apps Script
+# TESTING · 80 tests against a fake Apps Script
 
 ## The problem
 
@@ -47,12 +47,12 @@ A tiny in-context framework (`test()`, `expect()` with `toBe/toEqual/toContain/
 toBeTruthy/not`) runs the suites and exits 1 on any failure. That exit code is
 the deploy gate, locally (`deploy.sh` Gate 1) and in CI (workflow stage 2).
 
-## What the 78 tests cover
+## What the 80 tests cover
 
 | Suite | Focus |
 | --- | --- |
 | `test-models.js` | Transaction sanitization, kind defaults, off-book loans, row round-trips, PERSON_MAP |
-| `test-person.js` | name unification: «شلبي» = Shalaby in any spelling, old sheet rows normalize on read, repayment lands on the right balance, AI prompt carries the known-people line |
+| `test-person.js` | name unification: `PERSON_ALIASES` from Script Properties (حسن = Hassan in any spelling) + family `PERSON_MAP`, old sheet rows normalize on read, repayment lands on the right balance, AI prompt carries the known-people line |
 | `test-edit.js` | reply-to-edit idempotency, delete-by-reply money-back, runway line content (no income spam, yearless dates) |
 | `test-queue.js` | write-ahead reservation, no duplicate rows, "execution killed" recovery, transient vs permanent error triage |
 | `test-intent.js` | the local brain: quick formats, greetings, question routing |
